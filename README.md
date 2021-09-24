@@ -25,7 +25,7 @@ dim(data)
 names(data)
 ```
 
-# 1.1 Filtre de bases de dada
+## 1.1 Filtre de bases de dada
 
 ```{r Data Selection}
 # Seleccionamos solo los de España
@@ -38,7 +38,7 @@ n$variable<-ncol(d.e)
 n
 ```
 
-# 1.2 Descripcion de datos faltantes
+## 1.2 Descripcion de datos faltantes
 
 ```{r missing description}
 # missings
@@ -54,7 +54,7 @@ mis
 barplot(mis$count$forvar,col = c(2,3))
 ```
 
-# 1.3 Decralacion de variables
+## 1.3 Decralacion de variables
 
 ```{r Data Decralation}
 # definir tipus de variables
@@ -79,7 +79,7 @@ summary(d.e[,v$numeric])
 
 # 2 Descriptiva de base de dadas
 
-# 2.1 Analisi descriptiva a variables numericas
+## 2.1 Analisi descriptiva a variables numericas
 
 ```{r}
 d.n<-d.e[,v$numeric]
