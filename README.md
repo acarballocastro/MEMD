@@ -25,11 +25,12 @@ dim(data)
 names(data)
 ```
 
-## 1.1 Filtre de bases de dada
+# 1.1 Filtre de bases de dada
 
 ```{r Data Selection}
 # Seleccionamos solo los de España
 d.e<-data[data$country=='ESP',names(data)!='country']
+name<-names(d.e)
 
 # Descrpcion por la nova bases de dadas
 n<-list(total=prod(dim(d.e)))
@@ -38,7 +39,7 @@ n$variable<-ncol(d.e)
 n
 ```
 
-## 1.2 Descripcion de datos faltantes
+# 1.2 Descripcion de datos faltantes
 
 ```{r missing description}
 # missings
@@ -54,7 +55,7 @@ mis
 barplot(mis$count$forvar,col = c(2,3))
 ```
 
-## 1.3 Decralacion de variables
+# 1.3 Decralacion de variables
 
 ```{r Data Decralation}
 # definir tipus de variables
@@ -79,8 +80,43 @@ summary(d.e[,v$numeric])
 
 # 2 Descriptiva de base de dadas
 
-## 2.1 Analisi descriptiva a variables numericas
+# 2.1 Analisi descriptiva a variables numericas
 
 ```{r}
-d.n<-d.e[,v$numeric]
+for(i in v$integer) hist(d.e[[i]],main = name[i],xlab = name[i],breaks = 100)
+for(i in v$continua) hist(d.e[[i]],main = name[i],xlab = name[i],breaks = 100)
+for(i in v$times) hist(d.e[[i]],main = name[i],xlab = name[i],breaks = 100)
 ```
+
+## 2.2 Analisi descriptiva a variables Categorigas
+
+```{r}
+for(i in v$categoric) plot(d.e[[i]],main=name[i])
+
+```
+
+# 3 Preprocessing
+
+## 3.1 Missing
+
+```{r}
+
+```
+
+## 3.2 Outlier
+
+```{r}
+
+```
+
+## 3.3 Multicolinealidad
+
+```{r}
+
+```
+
+## 3.4 Transformacion de variables
+
+## 3.5 Creacion de novas variables
+
+## 4 Analisi factoria
