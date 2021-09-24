@@ -4,7 +4,7 @@ author: "Todo El Grupo"
 date: "24/9/2021"
 output: pdf_document
 params:
-  path: 'C:/Users/liang/OneDrive/Escritorio/data'
+  path: 'la ruta'
   data.origin: 'hotel_bookings.csv'
 ---
 
@@ -30,6 +30,7 @@ names(data)
 ```{r Data Selection}
 # Seleccionamos solo los de España
 d.e<-data[data$country=='ESP',names(data)!='country']
+name<-names(d.e)
 
 # Descrpcion por la nova bases de dadas
 n<-list(total=prod(dim(d.e)))
@@ -82,8 +83,43 @@ summary(d.e[,v$numeric])
 # 2.1 Analisi descriptiva a variables numericas
 
 ```{r}
-d.n<-d.e[,v$numeric]
+for(i in v$integer) hist(d.e[[i]],main = name[i],xlab = name[i],breaks = 100)
+for(i in v$continua) hist(d.e[[i]],main = name[i],xlab = name[i],breaks = 100)
+for(i in v$times) hist(d.e[[i]],main = name[i],xlab = name[i],breaks = 100)
 ```
+
+## 2.2 Analisi descriptiva a variables Categorigas
+
+```{r}
+for(i in v$categoric) plot(d.e[[i]],main=name[i])
+
+```
+
+# 3 Preprocessing
+
+## 3.1 Missing
+
+```{r}
+
+```
+
+## 3.2 Outlier
+
+```{r}
+
+```
+
+## 3.3 Multicolinealidad
+
+```{r}
+
+```
+
+## 3.4 Transformacion de variables
+
+## 3.5 Creacion de novas variables
+
+## 4 Analisi factoria
 
 
 
