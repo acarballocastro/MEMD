@@ -12,16 +12,20 @@ params:
 knitr::opts_chunk$set(echo = TRUE , comment = '', warning = F)
 ```
 
-```{r Data Read}
-data<-read.csv(paste0(params$path,'/',params$data.origin))
-```
+# 1 Estructura de base de dadas
 
-```{r Data Description}
+```{r Data Read}
+# Leer base de dada
+data<-read.csv(paste0(params$path,'/',params$data.origin))
+
 # n.observacions y n.variables
 dim(data)
+
 #nombre de cada variable
 names(data)
 ```
+
+# 1.1 Filtre de bases de dada
 
 ```{r Data Selection}
 # Seleccionamos solo los de España
@@ -32,7 +36,11 @@ n<-list(total=prod(dim(d.e)))
 n$observation<-nrow(d.e)
 n$variable<-ncol(d.e)
 n
+```
 
+# 1.2 Descripcion de datos faltantes
+
+```{r missing description}
 # missings
 d.e[d.e=='NULL']<-NA
 mis<-sapply(d.e,function(x) sum(is.na(x)))
@@ -45,6 +53,8 @@ mis<-list(count=list(number=n$missing,forvar=mis),
 mis
 barplot(mis$count$forvar,col = c(2,3))
 ```
+
+# 1.3 Decralacion de variables
 
 ```{r Data Decralation}
 # definir tipus de variables
@@ -65,4 +75,12 @@ for(i in v$times) d.e[[i]]<-as.Date(d.e[[i]])
 # Descripcion general
 summary(d.e[,v$categoric])
 summary(d.e[,v$numeric])
+```
+
+# 2 Descriptiva de base de dadas
+
+# 2.1 Analisi descriptiva a variables numericas
+
+```{r}
+d.n<-d.e[,v$numeric]
 ```
