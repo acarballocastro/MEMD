@@ -1,5 +1,5 @@
 Variable			Type			Description								Source/Engineering
-ADR				Numeric			Average Daily Rate as defined by [5]				BO, BL and TR / Calculated by dividing the sum of all lodging transactions by the total number of staying nights
+ADR				Numeric			Average Daily Rate as defined by American Hotel & Lodging Association Uniform System of Accounts for the Lodging Industry (11th Revised edition), Educational Institute, New York (2014)				BO, BL and TR / Calculated by dividing the sum of all lodging transactions by the total number of staying nights
 Adults				Integer			Number of adults						BO and BL
 Agent				Categorical		ID of the travel agency that made the bookinga			BO and BL
 ArrivalDateDayOfMonth		Integer			Day of the month of the arrival date				BO and BL
