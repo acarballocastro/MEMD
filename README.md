@@ -5,8 +5,8 @@
 Componentes del grupo:
 
 - Alejandro Angulo Torre
-- Joan Braut Grané
 - Marina Barber Andreo
+- Joan Braut Grané
 - Alba Carballo Castro
 - Tommy Harold Herrera Santos
 - Yuhang Liang
