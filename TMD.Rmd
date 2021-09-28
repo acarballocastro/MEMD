@@ -52,7 +52,9 @@ mis<-list(count=list(number=n$missing,forvar=mis),
           relative=list(forall=n$missing/n$total,formissing=mis/n$missing,
                         forvar=mis/n$observation))
 mis
-barplot(mis$count$forvar,col = c(2,3))
+barplot(mis$relative$formissing,col = c(2,3),ylim=c(0,1),main = 'Proporción de missing')
+text(c(0.7,2),mis$relative$formissing+0.05,
+     paste0(round(mis$relative$formissing,2)*100,'%'),col='blue')
 ```
 
 # 1.3 Decralacion de variables
