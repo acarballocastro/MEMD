@@ -1,19 +1,19 @@
 ###############################################
-# T韙ulo: 2.Descriptiva
+# T铆tulo: 2.Descriptiva
 # Autor: Alba, Aleix, Pol, Yuhang, Irene
 # Fecha: 24/11/21
 
-# Descripci髇: En este script hacemos 
+# Descripci贸n: En este script hacemos 
 # la descriptiva univariante de las variables
 ###############################################
 
-# LIBRER虯S
+# LIBRER脥AS
 library("ggplot2")
 
 ###############################################
 
 # Leer base de datos
-path <-'C:/Users/Irene/Downloads'
+path <-'C:/Users/garys/Desktop/MINERIA DE DADES'
 data.origin <- 'hotel_bookings.csv'
 data <- read.csv(paste0(path,'/',data.origin))
 d.e <- data[data$country=='ESP',names(data)!='country']
@@ -21,7 +21,7 @@ d.e <- data[data$country=='ESP',names(data)!='country']
 
 # DESCRIPTIVA
 
-# 1. Declaraci髇 de variables
+# 1. Declaraci贸n de variables
 
 # Definimos el tipo de variables
 v <- list(
@@ -39,8 +39,8 @@ v <- list(
 v$numeric<-c(v$integer,v$continua,v$times)
 v$withmissing<-v.mis
 
-########## OTRA VERSI覰 ###########
-# Cambio de variable adr (posici髇 27) a num閞ica
+########## OTRA VERSI脫N ###########
+# Cambio de variable adr (posici贸n 27) a num茅rica
 #d.e[,27] <- scan(text=d.e[,27], dec=",", sep=".")
 
 # Definimos el tipo de variables
@@ -57,7 +57,7 @@ v$withmissing<-v.mis
 #)
 #v$numeric<-c(v$integer,v$times)
 
-# Declaraci髇 de variables
+# Declaraci贸n de variables
 for(i in v$categoric) d.e[[i]]<-as.factor(d.e[[i]])
 for(i in v$integer) d.e[[i]]<-as.integer(d.e[[i]])
 for(i in v$times) d.e[[i]]<-as.Date(d.e[[i]])
@@ -65,19 +65,27 @@ levels(d.e$arrival_date_month)<-c("January", "February" ,"March", "April","May",
                                   "June" , "July", "August"  , "September" , 
                                   "November" , "October", "December")
 
-# Descripci髇 general
+# Descripci贸n general
 summary(d.e[,v$categoric])
 summary(d.e[,v$numeric])
 
 
 # 2. Descriptiva de la base de datos
 
-# 2.1 An醠isis descriptivo de variables num閞icas
+# 2.1 An谩lisis descriptivo de variables num茅ricas
 
 # for(i in v$integer){
 #   hist(d.e[[i]],main = i,xlab = i,breaks = 100)
 #   print(summary(d.e[[i]]))
 #  }
+
+for(i in v$numeric){
+  p <- ggplot(d.e, aes(x=d.e[,i]))+ theme_minimal()+
+    geom_histogram(color="darkblue", fill="lightblue", bins=30)
+  
+  print(p + labs(title= i,
+                 x = names(d.e)[which(names(d.e)==i)], y = "Count")) 
+}
 
 print(ggplot(d.e, aes(x=lead_time)) + geom_bar(stat = "count", fill="steelblue")+
         theme_minimal() +
@@ -141,12 +149,19 @@ print(summary(d.e[["reservation_status_date"]]))
 
 
 
-# 2.2 An醠isis descriptivo de variables categ髍icas
+# 2.2 An谩lisis descriptivo de variables categ贸ricas
 
 # for(i in v$categoric){
 #   plot(d.e[[i]],main=i)
 #   print(table(d.e[[i]]))
 # }
+
+require("RColorBrewer")
+for(i in v$categoric){
+  pie(table(d.e[,which(names(d.e)==i)]), radius = 1, col=brewer.pal(length(names(table(d.e[,which(names(d.e)==i)]))),'Spectral'))
+  legend(x = "topleft", legend = names(table(d.e[,which(names(d.e)==i)])),
+         fill=brewer.pal(length(names(table(d.e[,which(names(d.e)==i)]))),'Spectral'))
+}
 
 print(ggplot(d.e, aes(x=is_canceled)) + geom_bar(stat = "count", fill="steelblue")+
         theme_minimal() +
