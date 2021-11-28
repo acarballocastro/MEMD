@@ -173,7 +173,9 @@ d.e<- cbind(d.e, waiting_list)
 v.elimina<-which(names(d.e) %in% c('assigned_room_type','reserved_room_type','agent','company',"previous_cancellations", "days_in_waiting_list"))
 d.e <- d.e[,-v.elimina]
 
+# Guardamos la nueva base de datos para poder usarla en scripts posteriores
 
+write.csv(d.e, paste0(path,'/', 'hotel_bookings_proc.csv'), row.names = FALSE)
 
 # QUÉ FALTA?????
 # 1. HECHO. Crear bién las nuevas variables is_agent y is_company.
