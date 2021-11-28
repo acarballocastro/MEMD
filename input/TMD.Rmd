@@ -1,0 +1,274 @@
+---
+title: "Trabajo Mineria de dada"
+author: "Todo El Grupo"
+date: "24/9/2021"
+output:
+  html_document:
+    df_print: paged
+params:
+  data.origin: hotel_bookings.csv
+  path: C:/Users/liang/OneDrive/Escritorio/data
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE , comment = '', warning = F)
+```
+
+# 1 Estructura de base de dadas
+
+```{r Data Read}
+# Leer base de dada
+data<-read.csv(paste0(params$path,'/',params$data.origin))
+
+# n.observacions y n.variables
+dim(data)
+
+#nombre de cada variable
+names(data)
+```
+
+## 1.1 Filtre de bases de dada
+
+```{r Data Selection}
+# solo seleccionando clientes de España
+d.e<-data[data$country=='ESP',names(data)!='country']
+name<-names(d.e)
+
+# Descrpcion por la nova bases de dadas
+n<-list(total=prod(dim(d.e)))
+n$observation<-nrow(d.e)
+n$variable<-ncol(d.e)
+n
+```
+
+## 1.2 Descripcion de datos faltantes
+
+```{r missing description,fig.width=3,fig.height=2}
+# missings
+d.e[d.e=='NULL']<-NA
+mis<-sapply(d.e,function(x) sum(is.na(x)))
+v.mis<-which(mis>0)
+mis<-mis[mis>0]
+n$missing<-sum(mis)
+mis<-list(count=list(number=n$missing,forvar=mis),
+          relative=list(forall=n$missing/n$total,formissing=mis/n$missing,
+                        forvar=mis/n$observation))
+mis
+library(ggplot2)
+missing <- data.frame(prop=mis$relative$formissing, variable=names(mis$relative$formissing))
+p<-ggplot(data=missing, aes(x=variable, y=prop)) +
+   geom_bar(stat="identity", fill = "steelblue") +
+   geom_text(aes(label=round(prop*100,2)), vjust=1.6, color="black", size=3.5) +
+   theme_minimal() +
+   labs(x = "Variable", y = "Proportion of missings", title = "Missings")
+p
+```
+
+## 1.3 Decralacion de variables
+
+```{r Data Decralation}
+# definir tipus de variables
+v<-list(
+  categoric=c('is_canceled','hotel','arrival_date_year','arrival_date_month','meal',
+              'market_segment','distribution_channel','is_repeated_guest','reserved_room_type',
+              'assigned_room_type','deposit_type','agent','company','customer_type',
+              'reservation_status'),
+  integer=c('lead_time','arrival_date_week_number','arrival_date_day_of_month',
+            'stays_in_weekend_nights','stays_in_week_nights','adults','children','babies',
+            'previous_cancellations','previous_bookings_not_canceled','booking_changes',
+            'days_in_waiting_list','required_car_parking_spaces','total_of_special_requests'),
+  continua='adr',
+  times='reservation_status_date'
+        )
+v$numeric<-c(v$integer,v$continua,v$times)
+v$withmissing<-v.mis
+
+# decraracion de variables
+for(i in v$categoric) d.e[[i]]<-as.factor(d.e[[i]])
+for(i in v$integer) d.e[[i]]<-as.integer(d.e[[i]])
+for(i in v$times) d.e[[i]]<-as.Date(d.e[[i]])
+levels(d.e$arrival_date_month)<-c("January", "February" ,"March", "April","May",
+                                  "June" , "July", "August"  , "September" , 
+                                  "November" , "October", "December")
+levels(d.e$reserved_room_type)<-levels(d.e$assigned_room_type)
+```
+
+\newpage
+
+# 2 Descriptiva de base de dadas
+
+```{r, fig.width=3,fig.height=2}
+for(j in 1:4){
+  cat('Variable',names(v)[j],'\n')
+  color<-c('orange','steelblue','red','limegreen')[j]
+  for(i in v[[j]]){
+    cat('\n\n')
+    print(ggplot(d.e, aes(x=d.e[[i]])) + geom_bar(stat = "count", fill=color,na.rm = T)+
+          theme_minimal() +
+          labs(title = "Histogram")+xlab(i))
+    print(summary(d.e[[i]]))
+  }
+}
+```
+
+\newpage
+
+# 3 Preprocessing
+
+## 3.1 Missing
+
+Los missing que tengamos est?n en las variables company y agent, la cuales no son falta de respuestas sino que indica si un cliente hizo la resrva a trav?s de una agencia o no en el caso de agent, an?logamente con la variabel company Asi que eliminamos las variables company y agent pero a?adimos dos variable restype que inidca si es una reserva hecha por agente o compa??a o no
+
+```{r}
+d.e$is_company<-factor(ifelse(is.na(d.e$company),0,1))
+d.e$is_agent<-factor(ifelse(is.na(d.e$agent),0,1))
+v.elimina<-which(names(d.e) %in% c('company','agent'))
+d.e<-d.e[,-v.elimina]
+```
+
+```{r include=FALSE}
+# renovamos los indices
+v$withmissing<-NULL
+cla<-sapply(d.e, class)
+v$categoric<-which(cla=='factor')
+v$integer<-which(cla=='integer')
+v$continua<-which(cla=='numeric')
+v$numeric<-c(unlist(v$continua),unlist(v$integer))
+```
+
+## 3.2 Creacion de nuevas variables
+
+Creamos una nueva variable, si la habitaci?n reservada se corresponde con la habitaci?n asignada o no, Creemos qu esto puede tener m?s relevancia que el tipo de habitaciones que no conocemos debido a que es an?nimo
+
+```{r}
+d.e$room_coherence<-factor(d.e$reserved_room_type == d.e$assigned_room_type)
+```
+
+Creamos las variables si ha cancelalato , si ha asignado y si han estat algun dia a la llista d'espera o no anteriorment 
+
+```{r}
+d.e$if_prev_cancel<-factor(d.e$previous_cancellations>0)
+d.e$if_prev_asign<-factor(d.e$previous_bookings_not_canceled>0)
+d.e$if_wait<-factor(d.e$days_in_waiting_list>0)
+```
+
+```{r include=FALSE}
+# renovamos los indices
+cla<-sapply(d.e, class)
+v$categoric<-which(cla=='factor')
+v$integer<-which(cla=='integer')
+v$continua<-which(cla=='numeric')
+v$numeric<-c(unlist(v$continua),unlist(v$integer))
+```
+
+
+## 3.3 Multicolinealidad y Outlier
+
+```{r,fig.width=3,fig.height=2}
+ggplot(d.e, aes(x = arrival_date_year, fill = is_canceled, y = is_canceled)) + geom_col(position = 'fill' ) +ggtitle("Correlaci?n entre Fecha y cancelaci?n")+ labs(y="Cancelaciones", x = "Fecha")
+ggplot(d.e, aes(x = arrival_date_month, fill = is_canceled, y = is_canceled)) + geom_col(position = "fill")+ggtitle("Correlaci?n entre mes del a?o y cancelaci?n")+ labs(y="Cancelaciones", x = "Mes del a?o")
+ggplot(d.e, aes(x = arrival_date_day_of_month, fill = is_canceled, y = is_canceled)) + geom_col(position = "fill")+ggtitle("Correlacion entre dia del mes y cancelacion")+ labs(y="Cancelaciones", x = "Dia del mes")
+```
+
+Nos fijamos que nuestra variable respuesta esta igualmente distribuida en la variable arrival_date_day_of_month por lo que no aporta informacion nueva Sin embargo, la variable que hacer referencia al año si que es relevante, no obstante no la tendremos en cuenta ya que valoramos que no es interesante para los modelos que estudiaremos
+
+Como que no tiene mucha diferencia entre numero de semanas y meses dentro un año, eliminamos tambien el numero de semanas
+
+```{r}
+summary(d.e[,c('is_canceled','reservation_status')])
+```
+
+La variable reservation_status tiene misma informacion que la nuestra variable explicativa asi que la eliminamos
+
+```{r}
+v.elimina<-which(names(d.e) %in% c('reservation_status_date','arrival_date_week_number',
+             'arrival_date_day_of_month','reservation_status'))
+d.e<-d.e[,-v.elimina]
+```
+
+```{r include=FALSE}
+# renovamos los indices
+v$times<-NULL
+cla<-sapply(d.e, class)
+v$categoric<-which(cla=='factor')
+v$integer<-which(cla=='integer')
+v$continua<-which(cla=='numeric')
+v$numeric<-c(unlist(v$continua),unlist(v$integer))
+```
+
+```{r}
+corr<-cor(d.e[,v$numeric])
+corr[ col(corr)<=row(corr) ]<-0
+corr<-corr[!apply(corr, 1, function(x) all(abs(x)<0.2)),!apply(corr, 2, function(x) all(abs(x)<0.2))]
+corrplot::corrplot(corr)
+```
+
+Visto la alta correlacion entre previous_cancellations y previous_bookings_not_canceled, decidimos que eliminamos el previous_bookings_not_canceled, y logicamente el if_prev_asign tambien
+
+```{r}
+d.e<-d.e[,!names(d.e)%in%c('previous_bookings_not_canceled','if_prev_asign','previous_cancellations','days_in_waiting_list')]
+```
+
+```{r include=FALSE}
+# renovamos los indices
+cla<-sapply(d.e, class)
+v$categoric<-which(cla=='factor')
+v$integer<-which(cla=='integer')
+v$continua<-which(cla=='numeric')
+v$numeric<-c(unlist(v$continua),unlist(v$integer))
+```
+
+\newpage
+
+# 4 Analisi Descriptiva Prossecada
+
+## 4.1 Analisi Descriptiva univariante
+
+```{r,fig.width=3,fig.height=2}
+for(j in 1:3){
+  cat('Variable',names(v)[j],'\n')
+  color<-c('orange','steelblue','red')[j]
+  for(i in v[[j]]){
+    cat('\n\n')
+    print(ggplot(d.e, aes(x=d.e[[i]])) + geom_bar(stat = "count", fill=color)+
+          theme_minimal() +
+          labs(title = "Histogram")+xlab(names(d.e)[i]))
+    print(summary(d.e[[i]]))
+  }
+}
+```
+
+
+## 4.2 Analisi Descriptiva Bivariante
+
+```{r}
+for(j in 1:3){
+  cat('Variable',names(v)[j],'\n')
+  color<-c('orange','steelblue','red')[j]
+  par(mfrow=rep(c(4,3,1)[j],2),mar=c(3,3,3,1))
+  for(i in names(d.e)[v[[j]]]){
+    cat('\n\n')
+    if (j==1){
+      if(i=='is_canceled') next
+      barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=i,col=c(2,3))
+    }else if(j==2){
+      if(max(d.e[[i]])>10) boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=i,col=c(2,3),horizontal=T)
+      else barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=i,col=c(2,3))
+    }else boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=i,col=c(2,3),horizontal=T)
+  }
+}
+```
+
+\newpage
+
+# 5 Lo que sea
+
+
+
+
+
+
+
+
+
+
