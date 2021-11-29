@@ -47,29 +47,18 @@ d.e$is_company<-factor(ifelse(is.na(d.e$company),0,1))
 d.e$is_agent<-factor(ifelse(is.na(d.e$agent),0,1))
 v.elimina<-which(names(d.e) %in% c('company','agent'))
 d.e<-d.e[,-v.elimina]
-# renovamos los indices
-v$withmissing<-NULL
-cla<-sapply(d.e, class)
-v$categoric<-which(cla=='factor')
-v$integer<-which(cla=='integer')
-v$continua<-which(cla=='numeric')
-v$numeric<-c(unlist(v$continua),unlist(v$integer))
+
 
 d.e$room_coherence<-factor(d.e$reserved_room_type == d.e$assigned_room_type)
 d.e$if_prev_cancel<-factor(d.e$previous_cancellations>0)
 d.e$if_prev_asign<-factor(d.e$previous_bookings_not_canceled>0)
 d.e$if_wait<-factor(d.e$days_in_waiting_list>0)
-# renovamos los indices
-cla<-sapply(d.e, class)
-v$categoric<-which(cla=='factor')
-v$integer<-which(cla=='integer')
-v$continua<-which(cla=='numeric')
-v$numeric<-c(unlist(v$continua),unlist(v$integer))
 
 v.elimina<-which(names(d.e) %in% c('reservation_status_date','arrival_date_week_number',
                                    'arrival_date_day_of_month','reservation_status'))
 d.e<-d.e[,-v.elimina]
 # renovamos los indices
+v$withmissing<-NULL
 v$times<-NULL
 cla<-sapply(d.e, class)
 v$categoric<-which(cla=='factor')
