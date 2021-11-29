@@ -1,23 +1,34 @@
 ###############################################
-# TÃ­tulo: 3.Preprocessing
+# Título: 3.Preprocessing
 # Autor: Alba, Aleix, Pol, Yuhang, Irene
-# Fecha: 24/11/21
+# Fecha: 29/11/21
 
-# DescripciÃ³n: En este script hacemos el preprocessing
-# de la base de datos seleccionando las variables de interÃ©s 
+# Descripción: En este script hacemos el preprocessing
+# de la base de datos seleccionando las variables de interés 
 # y creando nuevas variables
 ###############################################
 
-# LIBRERÃAS
+# LIBRERÍAS
 library("ggplot2")
 
 ###############################################
 
 # Leer base de datos
-path <-'C:/Users/Irene/Downloads'
+path <-'C:/Users/Irene/Documents/RStudio/TREBALL'
 data.origin <- 'hotel_bookings.csv'
 data <- read.csv(paste0(path,'/',data.origin))
 d.e <- data[data$country=='ESP',names(data)!='country']
+
+# Missings
+# missings
+d.e[d.e=='NULL']<-NA
+mis<-sapply(d.e,function(x) sum(is.na(x)))
+v.mis<-which(mis>0)
+mis<-mis[mis>0]
+n$missing<-sum(mis)
+mis<-list(count=list(number=n$missing,forvar=mis),
+          relative=list(forall=n$missing/n$total,formissing=mis/n$missing,
+                        forvar=mis/n$observation))
 
 # Definimos el tipo de variables
 v <- list(
@@ -34,37 +45,98 @@ v <- list(
 )
 v$numeric<-c(v$integer,v$continua,v$times)
 v$withmissing<-v.mis
-########## OTRA VERSIÃ“N ###########
-# Cambio de variable adr (posiciÃ³n 27) a numÃ©rica
-#d.e[,27] <- scan(text=d.e[,27], dec=",", sep=".")
 
-# Definimos el tipo de variables
-#v <- list(
-#  categoric=c('is_canceled','hotel','arrival_date_year','arrival_date_month','meal',
-#              'market_segment','distribution_channel','is_repeated_guest','reserved_room_type',
-#              'assigned_room_type','deposit_type','agent','company','customer_type',
-#              'reservation_status'),
-#  integer=c('lead_time','arrival_date_week_number','arrival_date_day_of_month',
-#            'stays_in_weekend_nights','stays_in_week_nights','adults','children','babies',
-#            'previous_cancellations','previous_bookings_not_canceled','booking_changes',
-#            'days_in_waiting_list','adr','required_car_parking_spaces','total_of_special_requests'),
-#  times='reservation_status_date'
-#)
-#v$numeric<-c(v$integer,v$times)
 
-# DeclaraciÃ³n de variables
+# Declaración de variables
 for(i in v$categoric) d.e[[i]]<-as.factor(d.e[[i]])
 for(i in v$integer) d.e[[i]]<-as.integer(d.e[[i]])
 for(i in v$times) d.e[[i]]<-as.Date(d.e[[i]])
 levels(d.e$arrival_date_month)<-c("January", "February" ,"March", "April","May",
                                   "June" , "July", "August"  , "September" , 
-   
-                                                                                                "November" , "October", "December")
+                                  "November" , "October", "December")
+levels(d.e$reserved_room_type)<-levels(d.e$assigned_room_type)
+
+
 # PREPROCESSING
 
-# 1. Multicolinealidad
+# 1. Missing
 
-# Miramos la correlaciÃ³n entre variables numÃ©ricas con un valor mayor a 0.2
+# Los missings están concentrados en las variables 'company' y 'agent',
+# pero la ausencia de respuestas no es ausencia de información, pues cada NULL
+# nos indica que esos clientes NO hicieron la reserva a través de una compañía o agente.
+# Son missings no aleatorios, que sí aportan información.
+# Así que eliminamos las variables 'company' y 'agent' y añadimos 2 variables más: 
+# 'is_company' y 'is_agent', que indican si la reserva se ha hecho a través de 
+# una agencia o compañía, respectivamente.
+d.e$is_company<-factor(ifelse(is.na(d.e$company),0,1))
+d.e$is_agent<-factor(ifelse(is.na(d.e$agent),0,1))
+v.elimina<-which(names(d.e) %in% c('company','agent'))
+d.e<-d.e[,-v.elimina]
+
+
+
+
+# 2. Creación de nuevas variables
+
+# Creemos que es mejor saber si la habitación reservada se corresponde
+# con la asignada que considerar estas 2 variables por separado
+# ya que no sabemos qué significa cada categoría porque los datos
+# se han publicado así para preservar el anonimáto de los clientes.
+# Por eso, creamos una nueva variable, 1 si la habitación reservada se corresponde 
+# con la habitación asignada, 0 en caso contrario. 
+d.e$room_coherence<-factor(d.e$reserved_room_type == d.e$assigned_room_type)
+
+# Como con las habitaciones, consideramos que es mejor saber si ha habido
+# días en la cola de espera que saber cuántos son.
+d.e$if_wait<-factor(d.e$days_in_waiting_list>0)
+
+# Igualmente para 'previous_cancellations' i 'previous_bookings_not_canceled'
+d.e$if_prev_cancel<-factor(d.e$previous_cancellations>0)
+d.e$if_prev_asign<-factor(d.e$previous_bookings_not_canceled>0)
+
+# Eliminaremos las variables "duplicadas" al final
+
+
+
+# 3. Multicolinealidad
+
+# Empezamos estudiando las variables relacionadas con fechas
+# Año 
+ggplot(d.e, aes(x = arrival_date_year, fill = is_canceled, y = is_canceled))+ geom_col(position = 'fill' ) +ggtitle("Correlación entre Año y cancelación")+ labs(y="Cancelaciones", x = "Año")
+# Mes
+ggplot(d.e, aes(x = arrival_date_month, fill = is_canceled, y = is_canceled)) + geom_col(position = "fill")+ggtitle("Correlación entre Mes y cancelación")+ labs(y="Cancelaciones", x = "Mes")
+# Día
+ggplot(d.e, aes(x = arrival_date_day_of_month, fill = is_canceled, y = is_canceled)) + geom_col(position = "fill")+ggtitle("Correlación entre Día y cancelación")+ labs(y="Cancelaciones", x = "Día")
+
+# Notamos que nuestra variable respuesta está igual distribuida que la variable 'arrival_date_day_of_month'
+# por lo que esta última no aporta información nueva, así que la eliminaremos.
+# En cambio, la variable que hace referencia al año sí que es relevante,  
+# pero no la tendremos en cuenta ya que no es interesante para los modelos a estudiar.
+# Por otro lado, como no hay mucha diferencia entre número de semanas y meses en un año,
+# eliminaremos también el número de semanas.
+
+summary(d.e[,c('is_canceled','reservation_status')])
+
+# Aquí observamos que la variable 'reservation_status' tiene la misma información que
+# nuestra variable respuesta así que la eliminaremos, al igual que 'reservation_status_date'.
+# Finalmente, también eliminamos 'adr' que no aporta absolutamente nada.
+v.elimina<-which(names(d.e) %in% c('arrival_date_day_of_month','arrival_date_week_number',
+                                   'reservation_status','reservation_status_date','adr'))
+d.e <- d.e[,-v.elimina]
+
+# Renovamos los índices
+v$withmissing<-NULL
+v$times<-NULL
+cla<-sapply(d.e, class)
+v$categoric<-which(cla=='factor')
+v$integer<-which(cla=='integer')
+v$continua<-which(cla=='numeric')
+v$numeric<-c(unlist(v$continua),unlist(v$integer))
+
+
+
+
+# Ahora, miraremos la correlación entre variables numéricas con un valor mayor a 0.2
 v$times<-NULL
 v$withmissing<-NULL
 cla<-sapply(d.e, class)
@@ -78,11 +150,20 @@ corr[ col(corr)<=row(corr) ]<-0
 corr<-corr[!apply(corr, 1, function(x) all(abs(x)<0.2)),!apply(corr, 2, function(x) all(abs(x)<0.2))]
 corrplot::corrplot(corr)
 
-# 1.2 EliminaciÃ³n y creaciÃ³n de nuevas variables
 
-# Visto la alta correlacion entre 'previous_cancellations' y 'previous_bookings_not_canceled', 
+# Visto la alta correlación entre 'previous_cancellations' y 'previous_bookings_not_canceled', 
 # decidimos que eliminamos una de estas variables.
-d.e<-d.e[,names(d.e)!='previous_bookings_not_canceled']
+# Y como habíamos creado unas variables equivalentes (apartado 2.)
+# eliminaremos las dos 'previous_cancellations' y 'previous_bookings_not_canceled'
+# y la equivalente a una de ellas, 'if_prev_asign'.
+
+# Y ahora que ya hemos acabado con las correlaciones, eliminaremos las variables
+# que hemos sustituido por otras en el apartado 2.
+v.elimina<-which(names(d.e) %in% c('reserved_room_type','assigned_room_type','days_in_waiting_list',
+                                  'previous_cancellations', 'previous_bookings_not_canceled','if_prev_asign'))
+d.e <- d.e[,-v.elimina]
+
+# Renovamos los índices
 cla<-sapply(d.e, class)
 v$categoric<-which(cla=='factor')
 v$integer<-which(cla=='integer')
@@ -90,96 +171,10 @@ v$continua<-which(cla=='numeric')
 v$numeric<-c(unlist(v$continua),unlist(v$integer))
 
 
-plot(d.e$is_canceled~d.e$arrival_date_year+d.e$arrival_date_month+d.e$arrival_date_day_of_month)
 
-print(ggplot(d.e, aes(x = arrival_date_year, fill = is_canceled, y = is_canceled)) + geom_col(position = "fill"))
-print(ggplot(d.e, aes(x = arrival_date_month, fill = is_canceled, y = is_canceled)) + geom_col(position = "fill"))
-print(ggplot(d.e, aes(x = arrival_date_day_of_month, fill = is_canceled, y = is_canceled)) + geom_col(position = "fill"))
-
-# Notamos que nuestra variable respuesta estÃ¡ igual distribuida que la variable 'arrival_date_day_of_month'
-# por lo que esta Ãºltima no aporta informaciÃ³n nueva.
-# Por otro lado, la variable que hace referencia al aÃ±o sÃ­ que es relevante,  
-# pero no la tendremos en cuenta ya que no es interesante para los modelos a estudiar.
- 
-for(i in levels(d.e$arrival_date_year)){
-  plot(is_canceled~arrival_date_month,data = subset(d.e,d.e$arrival_date_year==i))
-}
-
-# Como que no hay mucha diferencia entre nÃºmero de semanas y meses en un aÃ±o,
-# eliminamos tambiÃ©n el nÃºmero de semanas.
-
-summary(d.e[,c('is_canceled','reservation_status')])
-
-# La variable 'reservation_status' tiene la misma informaciÃ³n que nuestra variable respuesta
-# asÃ­ que la eliminamos.
-# Finalmente, de todas estas variables temporales nos quedamos con la 'varrival_date_month',
-# pues creemos que es la mÃ¡s relevante.
-# TambiÃ©n eliminamos 'adr' que no aporta absolutamente nada.
-v.elimina<-which(names(d.e) %in% c('adr', 'reservation_status_date','arrival_date_year', 'arrival_date_week_number',
-                                   'arrival_date_day_of_month','reservation_status'))
-d.e <- d.e[,-v.elimina]
-
-# Los missings estÃ¡n concentrados en las variables 'company' y 'agent',
-# pero la ausencia de respuestas no es ausencia de informaciÃ³n, pues cada NULL
-# nos indica que esos clientes NO hicieron la reserva a travÃ©s de una compaÃ±Ã­a o agente.
-# Son missings no aleatorios, que sÃ­ aportan informaciÃ³n.
-# AsÃ­ que eliminamos las variables 'company' y 'agent' y aÃ±adimos 2 variables mÃ¡s: 
-# 'is_company' y 'is_agent', que indican si la reserva se ha hecho a travÃ©s de 
-# una agencia o compaÃ±Ã­a, respectivamente.
-summary(d.e$company)
-summary(d.e$agent)
-
-restype <- c()
-restype[d.e$agent=="NULL"] <- "company"
-restype[d.e$agent!="NULL"] <- "agent"
-
-d.e <- cbind(d.e, restype)
-
-# Creamos una nueva variable, 1 si la habitaciÃ³n reservada se corresponde 
-# con la habitaciÃ³n asignada, 0 en caso contrario. 
-# Creemos qu esto puede tener mÃ¡s relevancia que el tipo de habitaciÃ³n en sÃ­, 
-# pues no sabemos quÃ© significa cada categorÃ­a porque los datos se han publicado asÃ­
-# para preservar el anonimÃ¡to de los clientes.
-room_coherence <- c()
-
-for(i in 1:length(d.e[,21])){
-  if(d.e$reserved_room_type[i] == d.e$assigned_room_type[i]){
-    room_coherence[i] <- 1
-  }else{
-    room_coherence[i] <- 0
-  }
-}
-d.e$room_coherence <- room_coherence
-d.e$room_coherence<-as.factor(d.e$room_coherence)
-                                                               
-# Transformamos la variable 'previous_cancellations' en otra que nos indique 
-# si se ha cancelado o no anteriormente 
-
-prev_cancellations <- c()
-prev_cancellations[d.e$previous_cancellations>0] <- 1
-prev_cancellations[d.e$previous_cancellations==0] <- 0
-d.e<- cbind(d.e, prev_cancellations)
-
-# Transformamos la variable 'days_in_waiting_list' en otra que nos muestre
-# si han estado algun dÃ­a en la lista de espera o no
-
-waiting_list <- c()
-waiting_list[d.e$days_in_waiting_list>0] <- 1
-waiting_list[d.e$days_in_waiting_list==0] <- 0
-d.e<- cbind(d.e, waiting_list)
-
-
-# Suprimimos las variables que hemos sustituido por otras
-v.elimina<-which(names(d.e) %in% c('assigned_room_type','reserved_room_type','agent','company',"previous_cancellations", "days_in_waiting_list"))
-d.e <- d.e[,-v.elimina]
-
-# Guardamos la nueva base de datos para poder usarla en scripts posteriores
-
-write.csv(d.e, paste0(path,'/', 'hotel_bookings_proc.csv'), row.names = FALSE)
-
-# QUÃ‰ FALTA?????
-# 1. HECHO. Crear biÃ©n las nuevas variables is_agent y is_company.
+# QUÉ FALTA?????
+# 1. HECHO. Crear bién las nuevas variables is_agent y is_company.
 # 2. HECHO. Discretizar la variable lead_time (YA LO ES).
-# 3. Suprimir outliers, ya que no aportan informaciÃ³n nueva y podrÃ­an afectar a los modelos posteriores.
+# 3. Suprimir outliers, ya que no aportan información nueva y podrían afectar a los modelos posteriores.
 # 4. HECHO (el  nombre cambia a 'prev_cancellations'). Transformar la variable 'previous_cancellations' en si se ha cancelado o no anteriormente.
-# 5. HECHO (el  nombre cambia a 'waiting_list'). Transformar la variable 'days_in_waiting_list' en si han estado algun dÃ­a en la lista de espera o no.
+# 5. HECHO (el  nombre cambia a 'waiting_list'). Transformar la variable 'days_in_waiting_list' en si han estado algun día en la lista de espera o no.
