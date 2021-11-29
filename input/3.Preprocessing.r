@@ -20,11 +20,11 @@ data <- read.csv(paste0(path,'/',data.origin))
 d.e <- data[data$country=='ESP',names(data)!='country']
 
 # Missings
-# missings
 d.e[d.e=='NULL']<-NA
 mis<-sapply(d.e,function(x) sum(is.na(x)))
 v.mis<-which(mis>0)
 mis<-mis[mis>0]
+n<-list(total=prod(dim(d.e)))
 n$missing<-sum(mis)
 mis<-list(count=list(number=n$missing,forvar=mis),
           relative=list(forall=n$missing/n$total,formissing=mis/n$missing,

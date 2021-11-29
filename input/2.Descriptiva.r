@@ -18,6 +18,17 @@ data.origin <- 'hotel_bookings.csv'
 data <- read.csv(paste0(path,'/',data.origin))
 d.e <- data[data$country=='ESP',names(data)!='country']
 
+# Missings
+d.e[d.e=='NULL']<-NA
+mis<-sapply(d.e,function(x) sum(is.na(x)))
+v.mis<-which(mis>0)
+mis<-mis[mis>0]
+n<-list(total=prod(dim(d.e)))
+n$missing<-sum(mis)
+mis<-list(count=list(number=n$missing,forvar=mis),
+          relative=list(forall=n$missing/n$total,formissing=mis/n$missing,
+                        forvar=mis/n$observation))
+
 
 # DESCRIPTIVA
 
@@ -38,6 +49,7 @@ v <- list(
 )
 v$numeric<-c(v$integer,v$continua,v$times)
 v$withmissing<-v.mis
+
 ########## OTRA VERSIÓN ###########
 # Cambio de variable adr (posición 27) a numérica
 #d.e[,27] <- scan(text=d.e[,27], dec=",", sep=".")
