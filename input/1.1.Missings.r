@@ -12,7 +12,7 @@
 
 # Leer base de datos
 if(!exists('path')) path<-strsplit(shell('dir TMD.Rmd',intern = T)[4],' ')[[1]][4] ; setwd(path)
-if(!exists('e')) source('input/0.BD_read.r')
+if(!exists('e')) source('input/1.0.BD_read.r')
 # sacar informacions desde environment
 d.e<-e$d
 
