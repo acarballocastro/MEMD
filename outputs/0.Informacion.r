@@ -7,7 +7,7 @@
 # informacion general del base de datos
 ###############################################
 
-if(!exists('n')) source('Input/1.BD_read.r')
+if(!exists('n')) source('Input/0.BD_read.r')
 
 # n.observacions y n.variables
 cat('BD Dimencion:',dim(data))
