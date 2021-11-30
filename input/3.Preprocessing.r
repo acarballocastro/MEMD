@@ -14,7 +14,7 @@ library("ggplot2")
 ###############################################
 
 # Leer base de datos
-path <-'C:/Users/Irene/Documents/RStudio/TREBALL'
+path <-'C:/Users/garys/Desktop/MINERIA DE DADES'
 data.origin <- 'hotel_bookings.csv'
 data <- read.csv(paste0(path,'/',data.origin))
 d.e <- data[data$country=='ESP',names(data)!='country']
@@ -160,7 +160,7 @@ corrplot::corrplot(corr)
 # Y ahora que ya hemos acabado con las correlaciones, eliminaremos las variables
 # que hemos sustituido por otras en el apartado 2.
 v.elimina<-which(names(d.e) %in% c('reserved_room_type','assigned_room_type','days_in_waiting_list',
-                                  'previous_cancellations', 'previous_bookings_not_canceled','if_prev_asign'))
+                                   'previous_cancellations', 'previous_bookings_not_canceled','if_prev_asign'))
 d.e <- d.e[,-v.elimina]
 
 # Renovamos los índices
@@ -171,10 +171,5 @@ v$continua<-which(cla=='numeric')
 v$numeric<-c(unlist(v$continua),unlist(v$integer))
 
 
-
-# QUÉ FALTA?????
-# 1. HECHO. Crear bién las nuevas variables is_agent y is_company.
-# 2. HECHO. Discretizar la variable lead_time (YA LO ES).
-# 3. Suprimir outliers, ya que no aportan información nueva y podrían afectar a los modelos posteriores.
-# 4. HECHO (el  nombre cambia a 'prev_cancellations'). Transformar la variable 'previous_cancellations' en si se ha cancelado o no anteriormente.
-# 5. HECHO (el  nombre cambia a 'waiting_list'). Transformar la variable 'days_in_waiting_list' en si han estado algun día en la lista de espera o no.
+#saving the dataframe in an external file
+write.table(d.e, file = "datapreprocessed.csv", sep = ",", na = "NA", row.names=FALSE, col.names = TRUE)
