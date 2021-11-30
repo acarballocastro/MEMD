@@ -14,9 +14,9 @@ library("ggplot2")
 ###############################################
 
 # Leer base de datos
-path <-'C:/Users/garys/Desktop/MINERIA DE DADES'
-data.origin <- 'hotel_bookings.csv'
-data <- read.csv(paste0(path,'/',data.origin))
+path <-'../data'
+data.origin <- 'hotel_bookings_proc.csv'
+d.e <- read.csv(paste0(path,'/',data.origin))
 d.e <- data[data$country=='ESP',names(data)!='country']
 
 # Missings
@@ -72,8 +72,6 @@ d.e$is_company<-factor(ifelse(is.na(d.e$company),0,1))
 d.e$is_agent<-factor(ifelse(is.na(d.e$agent),0,1))
 v.elimina<-which(names(d.e) %in% c('company','agent'))
 d.e<-d.e[,-v.elimina]
-
-
 
 
 # 2. Creación de nuevas variables
@@ -170,6 +168,7 @@ v$integer<-which(cla=='integer')
 v$continua<-which(cla=='numeric')
 v$numeric<-c(unlist(v$continua),unlist(v$integer))
 
+# Guardamos la nueva base de datos para poder usarla en scripts posteriores
 
-#saving the dataframe in an external file
-write.table(d.e, file = "datapreprocessed.csv", sep = ",", na = "NA", row.names=FALSE, col.names = TRUE)
+write.csv(d.e, paste0(path,'/', 'hotel_bookings_proc.csv'), row.names = FALSE)
+
