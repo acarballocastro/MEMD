@@ -7,7 +7,7 @@
 # missings de la base de datos 
 ###############################################
 
-if(!exists('e1.dec')) source('Input/1.2.Declaracion.r')
+if(!exists('e1.dec')) source('input/1.2.Declaracion.r')
 d.e<-e1.dec$d
 v<-e1.dec$v
 
