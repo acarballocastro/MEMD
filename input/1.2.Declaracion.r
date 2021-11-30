@@ -7,7 +7,7 @@
 # la declaracion de las variables
 ###############################################
 
-if(!exists('e1.mis')) source('Input/1.1.Missings.r')
+if(!exists('e1.mis')) source('input/1.1.Missings.r')
 d.e<-e1.mis$d
 
 # definir tipus de variables
