@@ -7,7 +7,7 @@
 # los datos faltantes del BD
 ###############################################
 
-if(!exists('e1.mis')) source('Input/1.Missings.r')
+if(!exists('e1.mis')) source('Input/1.1.Missings.r')
 
 # Taula
 print(mis)
