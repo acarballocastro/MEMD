@@ -40,6 +40,10 @@ name <- c("Tipus Hotel", "Is Cancelled?", "Lead Time", "Arrival Date Year", "Arr
 dim(d.e)
 names(d.e)
 
+n<-list(total=prod(dim(d.e)))
+n$observation<-nrow(d.e)
+n$variable<-ncol(d.e)
+n
 
 
 # 2. Descripción de datos faltantes
