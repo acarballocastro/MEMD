@@ -21,6 +21,10 @@ name<-names(d.e)
 n<-list(total=prod(dim(d.e)),observation=nrow(d.e),variable=ncol(d.e))
 
 # Cargar paquetes necesarias y funciones propias
+pkg <- c('ggplot2',"corrplot","PerformanceAnalytics", "FactoMineR", "factoextra",'Matrix')
+new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+if (length(new.pkg)){ install.packages(new.pkg, dependencies = TRUE) ; rm(c('pkg','new.pkg'))}
+
 library(ggplot2)
 source('Function/Class_idx.r')
 
