@@ -43,7 +43,7 @@ sapply(d.e, class)
 
 # 2 Descriptiva de base de dadas
 
-```{r,fig.width=3,fig.height=2}
+```{r}
 source('outputs/2.Descriptiva.r')
 ```
 
@@ -98,7 +98,7 @@ source('input/3.3.Correlacion_tract.r')
 
 ## 4.1 Analisi Descriptiva univariante
 
-```{r,fig.width=3,fig.height=2}
+```{r}
 source('outputs/4.1.Descriptiva_univariante.r')
 ```
 

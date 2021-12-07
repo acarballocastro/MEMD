@@ -14,7 +14,8 @@ v<-e3.cor$v
 for(j in 1:3){
   cat('Variable',names(v)[j],'\n')
   color<-c('orange','steelblue','red')[j]
-  par(mfrow=rep(c(4,3,1)[j],2),mar=c(3,3,3,1))
+  # para tener varia plot en misma ventana
+  # par(mfrow=rep(c(4,3,1)[j],2),mar=c(3,3,3,1))
   for(i in v[[j]]){
     cat('\n\n')
     if (j==1){
