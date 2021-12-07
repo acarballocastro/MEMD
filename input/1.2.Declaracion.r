@@ -1,16 +1,14 @@
 ###############################################
-# Título: 2.Declaracion de variables
+# Título: 2.Declaración de variables
 # Autor: Alba, Aleix, Pol, Yuhang, Irene
 # Fecha: 29/11/21
-
-# Descripción: En este script hacemos 
-# la declaracion de las variables
+# Descripción: En este script hacemos  la declaración de las variables
 ###############################################
 
 if(!exists('e1.mis')) source('input/1.1.Missings.r')
 d.e<-e1.mis$d
 
-# definir tipus de variables
+# Definir tipus de variables
 v<-list(
   categoric=c('is_canceled','hotel','arrival_date_year','arrival_date_month','meal',
               'market_segment','distribution_channel','is_repeated_guest','reserved_room_type',
@@ -26,7 +24,7 @@ v<-list(
 )
 v$numeric<-c(v$integer,v$continua,v$times)
 
-# decraracion de variables
+# Declaración de variables
 for(i in v$categoric) d.e[[i]]<-as.factor(d.e[[i]])
 for(i in v$integer) d.e[[i]]<-as.integer(d.e[[i]])
 for(i in v$times) d.e[[i]]<-as.Date(d.e[[i]])
