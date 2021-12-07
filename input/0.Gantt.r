@@ -1,13 +1,13 @@
 ###############################################
-# T韙ulo: 0. Gantt
+# T铆tulo: 0.Gantt
 # Autor: Todos
 # Fecha: 24/11/21
 
-# Descripci髇: Script donde creamos el diagrama de Gantt 
-# que representala divisi髇 temporal del trabajo 
+# Descripci贸n: Script donde creamos el diagrama de Gantt 
+# que representala divisi贸n temporal del trabajo 
 ###############################################
 
-# LIBRER虯S
+# LIBRER脥AS
 library(DiagrammeR)
 
 ###############################################
@@ -23,31 +23,31 @@ Definir el proyecto      :done,      D1_2,   21-09,  28-09
 Entrega D1               :crit,      D1,     21-09,  28-09
 
 section D2
-Descomposici髇 de tareas  :done,    D2_1,    24-09,     05-10
+Descomposici贸n de tareas  :done,    D2_1,    24-09,     05-10
 Reparto de tareas   :done,    D2_3,    24-09,     05-10
 Plan de riesgos           :done,    D2_4,    24-09,     05-10
 Entrega D2                :crit,    D2,      after D1,  05-10
 
 section D3
-Depuraci髇 y descriptiva de datos :active,  D3_1,   after D1,     14-11
-Motivaci髇 del trabajo            :         D3_11,  after D1,     06-10
-Depuraci髇 de datos               :         D3_12,  after D1,     07-10
-An醠isis univariante inicial      :         D3_13,  after D3_12,  7d
+Depuraci贸n y descriptiva de datos :active,  D3_1,   after D1,     14-11
+Motivaci贸n del trabajo            :         D3_11,  after D1,     06-10
+Depuraci贸n de datos               :         D3_12,  after D1,     07-10
+An谩lisis univariante inicial      :         D3_13,  after D3_12,  7d
 Preprocessing                     :         D3_14,  after D3_12,  11-11
-An醠isis de datos procesados      :         D3_15,  after D3_14,  3d
+An谩lisis de datos procesados      :         D3_15,  after D3_14,  3d
 
-Proceso de miner韆 de datos       :active   D3_2,   after D3_14,  16-12
-Dise駉 del proceso                :         D3_21,  after D3_14,  7d
+Proceso de miner铆a de datos       :active   D3_2,   after D3_14,  16-12
+Dise帽o del proceso                :         D3_21,  after D3_14,  7d
 Seguimiento del proceso           :         D3_22,  after D3_21,  01-12
-An醠isis comparativo              :         D3_3,   after D3_22,  7d
-Conclusi髇                        :         F1,     after D3_3,   14-12
+An谩lisis comparativo              :         D3_3,   after D3_22,  7d
+Conclusi贸n                        :         F1,     after D3_3,   14-12
 Plan de trabajo                   :         F2,     after D3_3,   14-12
 Script R                          :active,  F3,     24-09,        16-12
 Entrega D3                        :crit,    D3,     after D2,     16-12
 
 Section Final
-Preparaci髇 presentaci髇  :       P1, 14-12,      16-12
-Presentaci髇 oral         :crit,  PF, 15-12,      16-12
+Preparaci贸n presentaci贸n  :       P1, 14-12,      16-12
+Presentaci贸n oral         :crit,  PF, 15-12,      16-12
 ", width=1268 , height=628)
 
 m$x$config = list(ganttConfig = list(
