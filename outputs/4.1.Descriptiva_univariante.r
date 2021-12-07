@@ -14,7 +14,7 @@ v<-e3.cor$v
 for(i in v$categoric){
   print(ggplot(d.e, aes(x=d.e[[i]])) + geom_bar(stat = "count", fill='orange',na.rm = T)+
           theme_minimal() +
-          labs(title = "Histogram",x=i))
+          labs(title = "Histogram",x=i,main=i))
   print(summary(d.e[[i]]))
 }
 
