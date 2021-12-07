@@ -2,7 +2,6 @@
 # Título: 1.Missings
 # Autor: Alba, Aleix, Pol, Yuhang, Irene
 # Fecha: 24/11/21
-
 # Descripción: Script donde se detectan los missings
 
 # realmente este script no sirve de nada ya que 
@@ -18,8 +17,8 @@ d.e<-e$d
 
 # 2. Descripción de datos faltantes
 
-# Missings (finalmente vimos en la metadata que no habían missings 
-# a diferencia de lo que habíamos dicho en las entregas D1 y D2).
+# Missings (finalmente vimos en la metadata que no habían missingsj, de 
+# hecho eran missings no aplicables, a diferencia de lo que habíamos dicho en las entregas D1 y D2).
 
 d.e[d.e=='NULL']<-NA
 mis<-sapply(d.e,function(x) sum(is.na(x)))
