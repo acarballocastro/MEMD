@@ -1,5 +1,5 @@
 ###############################################
-# Título: 3. Descriptiva Bivariante
+# Título: 4. Descriptiva Bivariante
 # Autor: Alba, Aleix, Pol, Yuhang, Irene
 # Fecha: 29/11/21
 
@@ -21,8 +21,10 @@ for(j in 1:3){
       if(i=='is_canceled') next
       barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=i,col=c(2,3))
     }else if(j==2){
-      if(max(d.e[[i]])>10) boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=i,col=c(2,3),horizontal=T)
-      else barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=i,col=c(2,3))
+      qti<-sapply(d.e[v$integer], function(x) quantile(x,0.9995)); names(qti)<-v[[j]]
+      if(qti[i]>=10){ 
+        boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=i,col=c(2,3),horizontal=T)
+      }else barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=i,col=c(2,3))
     }else boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=i,col=c(2,3),horizontal=T)
   }
 }
