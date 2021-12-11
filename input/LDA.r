@@ -1,4 +1,3 @@
-
 if(!exists('e3.cor')) source('input/3.3.Correlacion_tract.r')
 d.e<-e3.cor$d
 v<-e3.cor$v
@@ -41,7 +40,7 @@ mod.lda2<-lda(data=d.lda.train,is_canceled~.)
 # Comparar los acculacy de los modelos
 acuracy<-rbind(accu(d.e,mod.lda,'is_canceled',1),accu(d.e,mod.lda2,'is_canceled',1),
       accu(d.lda.train,mod.lda2,'is_canceled',1),accu(d.lda.test,mod.lda2,'is_canceled',1))
-rownames(acuracy)<-c('Mod 1 test all','Mod 2 test all','Mod 2 test train','Mod 2 test test')
+rownames(acuracy)<-c('Mod 1 pred all','Mod 2 pred all','Mod 2 pred train','Mod 2 pred test')
 print(acuracy)
 # no tenga mucha diferencia entre acuracy del test y train con el mod2, por lo tanto no hay overfiting
 
@@ -68,27 +67,28 @@ vmedi<-which.min(abs(p.test$posterior[,1]-pes))
 
 # Representa los resultados en los LDA principals:
 corte<-p.test$x[vmedi]
-col<-apply(d.lda.test, 1, function(x) ifelse(x[2]==0,'red','blue'))
-plot(p.test$x,col=col,main='Graphic of first plan factorial',ylab='LDA 1',xlab='Index')
+col0<-rgb(1,102/255,128/255)
+col1<-rgb(63/255,211/255,247/255)
+col<-apply(d.lda.test, 1, function(x) ifelse(x[2]==0,col0,col1))
+plot(p.test$x,col=col,pch=16,
+     main='Graphic of first plan factorial',ylab='LDA 1',xlab='Index')
 abline(h=corte,lwd=3)
-
+polygon(x=c(-500,2000,2000,-500),y=c(5,5,corte,corte),
+        col=col1,density = 20)
+polygon(x=c(-500,2000,2000,-500),y=c(-5,-5,corte,corte),
+        col=col0,density = 20)
 
 p.test$posterior[204,]
+
 # Como que solo hay una unica LDA, resulta mejor un histograma:
-plot(density(p.test$x[col=='red']),col='red',xlim = c(-4,5),ylim = c(0,0.7),lty=2,lwd=4,
+plot(density(p.test$x[col==col0]),col=c0,xlim = c(-4,5),ylim = c(0,0.7),lty=2,lwd=4,
      main='Density of first axe factorial',xlab='LDA 1')
-lines(density(p.test$x[col=='blue']),col='blue',lty=2,lwd=4)
-hist(p.test$x[col=='red'],col='red',density = T,freq=F,add=T,breaks = 50)
-hist(p.test$x[col=='blue'],col='blue',add=T,density = T,freq=F,breaks = 50)
+lines(density(p.test$x[col==col1]),col=c1,lty=2,lwd=4)
+hist(p.test$x[col==col0],col=col0,density = 1,freq=F,add=T,breaks = 50)
+hist(p.test$x[col==col1],col=col1,add=T,density = 1,freq=F,breaks = 50)
 abline(v=corte,lwd=3)
 legend('topleft',legend = c('is_canceled=0','is_canceled=1','puto de referencia'),
-       col=c('red','blue',1),lty=c(2,2,1))
-
-
-
-
-
-
+       col=c(col0,col1,1),lty=c(2,2,1))
 
 
 
