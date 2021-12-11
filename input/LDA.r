@@ -78,8 +78,6 @@ polygon(x=c(-500,2000,2000,-500),y=c(5,5,corte,corte),
 polygon(x=c(-500,2000,2000,-500),y=c(-5,-5,corte,corte),
         col=col0,density = 20)
 
-p.test$posterior[204,]
-
 # Como que solo hay una unica LDA, resulta mejor un histograma:
 plot(density(p.test$x[col==col0]),col=c0,xlim = c(-4,5),ylim = c(0,0.7),lty=2,lwd=4,
      main='Density of first axe factorial',xlab='LDA 1')
