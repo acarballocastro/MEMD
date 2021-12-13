@@ -1,16 +1,16 @@
 ###############################################
-# T�tulo: 1. Preprocessing
+# Título: 1. Preprocessing
 # Autor: Alba, Aleix, Pol, Yuhang, Irene
 # Fecha: 24/11/21
-# Descripci�n: En este script hacemos el preprocessing
-# de la base de datos seleccionando las variables de inter�s 
+# Descripción: En este script hacemos el preprocessing
+# de la base de datos seleccionando las variables de interés 
 # y creando nuevas variables
 ###############################################
 
 path <-'../data'
 data <- read.csv2(paste0(path,'/',"../data/hotel_bookings.csv"), sep=",")
 
-# Seleccionamos solo clientes de Espa�a
+# Seleccionamos solo clientes de España
 d.e <- data[data$country=='ESP',names(data)!='country']
 name <- names(d.e)
 
@@ -21,9 +21,9 @@ pkg <- c('ggplot2',"corrplot","PerformanceAnalytics", "FactoMineR", "factoextra"
 new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
 if (length(new.pkg)){ install.packages(new.pkg, dependencies = TRUE) ; rm(c('pkg','new.pkg'))}
 
-# 2. Descripci�n de datos faltantes
+# 2. Descripción de los datos
 
-# Missings 
+# Descripcion de datos faltantes
 # Comprobamos en la metadata que eran missings del tipo no aplicables.
 
 d.e[d.e=='NULL'] <- NA
@@ -52,7 +52,7 @@ v <- list(
 )
 v$numeric <- c(v$integer,v$continua,v$times)
 
-# Declaraci�n de variables
+# Declaración de variables
 for(i in v$categoric) d.e[[i]]<-as.factor(d.e[[i]])
 for(i in v$integer) d.e[[i]]<-as.integer(d.e[[i]])
 for(i in v$times) d.e[[i]]<-as.Date(d.e[[i]])
@@ -61,6 +61,63 @@ levels(d.e$arrival_date_month)<-c("January", "February" ,"March", "April","May",
                                   "November" , "October", "December")
 levels(d.e$reserved_room_type)<-levels(d.e$assigned_room_type)
 
+          
+## Analisi Descriptiva univariante inicial
+
+#Se realiza un bucle para la creación de gráficos automáticamente.
+
+#Con la función capitalize se pone en mayúsculas la primera letra del nombre
+#y con la función gsub substituyo los simbolos "_" por espacios. Para ello 
+#necesitamos la librería Hmisc
+
+#Con la función png se guardan los gráficos en el ordenador en vez de salida de
+#R para ponerlos y comentarlos en el documento Word. Hay que tener en cuenta
+#que se guardará en el Directorio de trabajo en el que os encontréis.
+
+
+library(Hmisc)
+for(j in 1:4){
+  # j=1 categorica, 2 integer , 3 continua , 4 temporal
+  cat('\n\nVariable',names(v)[j],'\n')
+  color<-"darkolivegreen2"
+  for(i in v[[j]]){
+    a<-capitalize(gsub("_", " ", i))
+    cat('\n\n')
+    #png(paste0(a,".","png"))
+    print(ggplot(d.e, aes(x=d.e[[i]])) + geom_bar(stat = "count", fill=color,na.rm = T)+
+            theme_minimal() +
+            labs(title = "Histogram")+xlab(a))
+    #dev.off()
+    print(summary(d.e[[i]]))
+  }
+}
+
+## Analisi Descriptiva bivariante inicial
+
+#A parte de lo mencionado anteriormente en este caso se tiene en cuenta que tipo
+#de variable es para hacer el gráfico bivariante. Las variables numéricas
+#que no se podían representar con un boxplot se han representado con un barplot.
+
+for(j in 1:3){
+  color<-c("Indianred2","darkolivegreen2")
+  for(i in v[[j]]){
+    b<-capitalize(gsub("_", " ", i))
+    #png(paste0(b,".","png"))
+    if (j==1){
+      if(i=='is_canceled'){ next }
+      barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=b,col=color)
+    }else if(j==2){
+      if(median(d.e[[i]])>=1 && median(d.e[[i]]) != quantile(d.e[[i]],0.75)){
+        boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=b,col=color,horizontal=T)}
+      else barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=b,col=color)
+    }else {boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=b,col=color,horizontal=T)}
+    #dev.off()
+  }
+}
+
+              
+## Missing      
+              
 cat.idx<-function(data,name=NULL,mis=NULL,time=NULL){
   if(missing(name)) name<-1:length(data)
   cla<-sapply(data, class)
@@ -115,3 +172,63 @@ levels(d.e$market_segment) <- c("Aviation","Complementary","Corporate","Direct",
 # Guardamos la nueva base de datos para poder usarla en scripts posteriores
 
 write.csv(d.e, paste0(path,'/', 'data_preproc.csv'), row.names = FALSE)
+                  
+                  
+## Descriptiva posterior
+
+# Analisi descriptiva Univariante posterior
+
+#Se realiza un bucle para la creación de gráficos automáticamente.
+
+#Con la función capitalize se pone en mayúsculas la primera letra del nombre
+#y con la función gsub substituyo los simbolos "_" por espacios. Para ello 
+#necesitamos la librería Hmisc
+
+#Con la función png se guardan los gráficos en el ordenador en vez de salida de
+#R para ponerlos y comentarlos en el documento Word. Hay que tener en cuenta
+#que se guardará en el Directorio de trabajo en el que os encontréis.
+
+library(Hmisc)
+
+for(j in 1:3){
+  cat('Variable',names(v)[j],'\n')
+  color<-"darkolivegreen2"
+  for(i in v[[j]]){
+    a2<-capitalize(gsub("_", " ", names(d.e)[i]))
+    cat('\n\n')
+    #png(paste0(a2,".","png"))
+    print(ggplot(d.e, aes(x=d.e[[i]])) + geom_bar(stat = "count", fill=color)+
+            theme_minimal() +
+            labs(title = "Histogram")+xlab(a2))
+    #dev.off()
+    print(summary(d.e[[i]]))
+  }
+}
+
+
+# Analisi Descriptiva Bivariante posterior
+
+#A parte de lo mencionado anteriormente en este caso se tiene en cuenta que tipo
+#de variable es para hacer el gráfico bivariante. Las variables numéricas
+#que no se podían representar con un boxplot se han representado con un barplot.
+
+for(j in 1:3){
+  cat('Variable',names(v)[j],'\n')
+  color<-c("Indianred2","darkolivegreen2")
+  
+  for(i in names(d.e)[v[[j]]]){
+    b2<-capitalize(gsub("_", " ", i))
+    cat('\n\n')
+    #png(paste0(b2,".","png"))
+    if (j==1){
+      if(i=='is_canceled') next
+      barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=b2,col=color)
+    }else if(j==2){
+      if(median(d.e[[i]])>=1 && median(d.e[[i]])!= quantile(d.e[[i]],0.75)) boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=b2,col=color,horizontal=T)
+      else barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=b2,col=color)
+    }else boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=b2,col=color,horizontal=T)
+    #dev.off()
+  }
+}
+
+               
