@@ -172,3 +172,63 @@ levels(d.e$market_segment) <- c("Aviation","Complementary","Corporate","Direct",
 # Guardamos la nueva base de datos para poder usarla en scripts posteriores
 
 write.csv(d.e, paste0(path,'/', 'data_preproc.csv'), row.names = FALSE)
+                  
+                  
+## Descriptiva posterior
+
+# Analisi descriptiva Univariante posterior
+
+#Se realiza un bucle para la creación de gráficos automáticamente.
+
+#Con la función capitalize se pone en mayúsculas la primera letra del nombre
+#y con la función gsub substituyo los simbolos "_" por espacios. Para ello 
+#necesitamos la librería Hmisc
+
+#Con la función png se guardan los gráficos en el ordenador en vez de salida de
+#R para ponerlos y comentarlos en el documento Word. Hay que tener en cuenta
+#que se guardará en el Directorio de trabajo en el que os encontréis.
+
+library(Hmisc)
+
+for(j in 1:3){
+  cat('Variable',names(v)[j],'\n')
+  color<-"darkolivegreen2"
+  for(i in v[[j]]){
+    a2<-capitalize(gsub("_", " ", names(d.e)[i]))
+    cat('\n\n')
+    #png(paste0(a2,".","png"))
+    print(ggplot(d.e, aes(x=d.e[[i]])) + geom_bar(stat = "count", fill=color)+
+            theme_minimal() +
+            labs(title = "Histogram")+xlab(a2))
+    #dev.off()
+    print(summary(d.e[[i]]))
+  }
+}
+
+
+# Analisi Descriptiva Bivariante posterior
+
+#A parte de lo mencionado anteriormente en este caso se tiene en cuenta que tipo
+#de variable es para hacer el gráfico bivariante. Las variables numéricas
+#que no se podían representar con un boxplot se han representado con un barplot.
+
+for(j in 1:3){
+  cat('Variable',names(v)[j],'\n')
+  color<-c("Indianred2","darkolivegreen2")
+  
+  for(i in names(d.e)[v[[j]]]){
+    b2<-capitalize(gsub("_", " ", i))
+    cat('\n\n')
+    #png(paste0(b2,".","png"))
+    if (j==1){
+      if(i=='is_canceled') next
+      barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=b2,col=color)
+    }else if(j==2){
+      if(median(d.e[[i]])>=1 && median(d.e[[i]])!= quantile(d.e[[i]],0.75)) boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=b2,col=color,horizontal=T)
+      else barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=b2,col=color)
+    }else boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=b2,col=color,horizontal=T)
+    #dev.off()
+  }
+}
+
+               
