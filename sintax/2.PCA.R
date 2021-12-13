@@ -77,6 +77,7 @@ res.pca$var$cos2
 # Variable contributions in the determination of a given principal component are (in percentage) : (var.cos2 * 100) / (total cos2 of the component)
 taula<- res.pca$var$contrib
 
+
 ## DIMENSION 1VS2
 fviz_pca_var(res.pca, col.var="contrib")
 
@@ -105,6 +106,7 @@ fviz_pca_ind(res.pca,  col.ind="cos2") +
                         high="red", midpoint=0.50)+
   theme_minimal()
 #If we look at this graph we see that individual 173 is clearly an outlier
+
 
 # Make a biplot of individuals and variables :
 fviz_pca_biplot(res.pca,  geom = "text")
