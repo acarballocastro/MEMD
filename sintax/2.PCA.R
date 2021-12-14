@@ -1,5 +1,5 @@
 ###############################################
-# Título: 3. PCA
+# Título: 2. PCA
 # Autor: Aleix
 # Fecha: 30/11/21
 # Descripción: PRINCIPAL COMPONENT ANALYSIS (PCA). El objetivo de PCA es la reducción de dimensiones, que se puede utilizar para:
