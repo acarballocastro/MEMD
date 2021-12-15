@@ -30,7 +30,7 @@ ks<-1:8
 #Tarda en ejecutar, cuiadado!
 for(i in ks){
   
-  result<-kNN(aux, metric="gower",k=1, variable = "is_canceled", weightDist = T)
+  result<-kNN(aux, metric="gower",k=i, variable = "is_canceled", weightDist = T)
   tab<-table(result[test,2], dd_knn[test,2])
   acc<-(tab[1, 1] +tab[2, 2])/sum(tab)
   accuracys<-c(accuracys, acc)
