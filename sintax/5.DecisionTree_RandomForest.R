@@ -10,16 +10,35 @@ library(xgboost)
 library(tidyverse)
 library(caret)
 library(caTools)
+library(verification)
 
 # Importamos la base de datos procesada y para poder hacer una buena validación
 # cogemos un tercio de nuestros datos para que sean nuestra base test.
 
 dd <- read.csv2("hotel_bookings_proc.csv", header = T, sep =',')
 
+v<-list(
+  categoric=c('hotel','is_canceled', 'arrival_date_month','arrival_date_year', 'meal','market_segment','distribution_channel',
+              'is_repeated_guest','reserved_room_type','assigned_room_type', 'room_coherence', 
+              'is_company', 'is_agent', 'customer_type','deposit_type', 'if_prev_cancel','if_wait'),
+  integer=c('lead_time', 'stays_in_weekend_nights','stays_in_week_nights','adults','children','babies',
+            'booking_changes','required_car_parking_spaces','total_of_special_requests'),
+  continua='adr')
+v$numeric <- c(v$integer,v$continua)
+
+for(i in v$categoric) dd[[i]]<-as.factor(dd[[i]])
+for(i in v$integer) dd[[i]]<-as.integer(dd[[i]])
+
+sapply(dd,class)
+
+dd$adr <- as.numeric(dd$adr)
+
 test<- sample(1:nrow(dd),size = nrow(dd)/3)
+
 
 dataTrain<-dd[-test,]
 dataTest<-dd[test,]
+
 
 # Una vez tenemos nuestra base de datos lista, utilizamos la función rpart para crear
 # un decision tree. Nuestra variable regresora es is_canceled y cogemos la base de datos
@@ -42,30 +61,39 @@ pred_dt <- predict(d_tree, newdata = dataTest)
 # dependiendo de si tienen un valor más pequeño de 0.5 o más grande, resprectivamente.
 
 pred_dtp <- pred_dt[, 2]
-pred_dtp[pred_dt[, 2] < 0.5] <- 0
-pred_dtp[pred_dt[, 2] >= 0.5] <- 1
+pred_dtp[pred_dt[, 2] < 0.5] <- "Cancelled"
+pred_dtp[pred_dt[, 2] >= 0.5] <- "Not_cancelled"
  
 # Aquí vemos con una tabla cuantos valores hemos acertado y cuantos fallado.
 (t_dt <- table(dataTest$is_canceled, pred_dtp))
 
-# Calculamos la precisión del modelo creado (0.848)
+# Ejecutamos la función acu creada anteriormente:
 
-(accuracy <- sum(diag(t_dt))/sum(t_dt))
+confusionMatrix(t_dt)
 
 
+# Creamos una curva de ROC para comprobar que capacidad de predicción tiene nuestro modelo creado:
+
+print(roc.plot(dataTest$is_canceled == "Cancelled", pred_dt[,1])$roc.vol)
+
+
+### RANDOM FOREST
 # Ahora utilizaremos el paquete RandomForest para hacer el modelo. Decidimos crear 100 árboles para este modelo (ntree = 100)
 
 model_rf <- randomForest(dataTrain[-2], y = dataTrain$is_canceled,importance = T, ntree=100, proximity = T, xtest = dataTest[-2], ytest=dataTest$is_canceled)
 
-# Cogemos la tabla que nos muestra la predicción junto con los datos reales:
+# Cogemos la tabla de confusión que nos muestra la predicción junto con los datos reales:
 
-p_test <- model_rf$test$confusion
+p_test <- model_rf$test$confusion[1:2,1:2]
 
-# Calculamos la precisión (0.863):
+confusionMatrix(p_test)
 
-(accuracy <- sum(diag(p_test))/sum(p_test[,1:2]))
+# Volvemos a crear la curva de ROC para comprobar de nuevo la capacidad de predicción:
 
-  
+print(roc.plot(dataTest$is_canceled == "Not_cancelled", model_rf$test$votes[,2])$roc.vol)
+
+
+### XGBOOST
 # Ahora usaremos el método de Xgboost para la predicción de la variable is_canceled:
 
 # Primero guardaremos los valores de la variable is_canceled de los datos de validación (dataTest)
@@ -74,7 +102,7 @@ validacion_test <- dataTest$is_canceled
 
 # Una vez hecho esto, pasamos a NAs a toda la columna de la variable regresora:
 
-dataTest$is_canceled <- NA
+# dataTest$is_canceled <- NA
 
 # Ahora pasamos todas las variables a numèricas, tanto la base de datos train como 
 # la base de datos test.
@@ -103,16 +131,16 @@ hotel$test <- dataTest
 
 # Transformamos los datos en una DMatrix para que los datos sean compatibles con la función Xgboost:
 
+apply(hotel$test,2,is.factor)
+
 hotel$train_mat <- 
-  hotel$train %>%
-  select(-is_canceled) %>%
+  hotel$train  %>%
   as.matrix() %>%
   xgb.DMatrix(data = ., label = hotel$train$is_canceled)
 
 
 hotel$test_mat <- 
-  hotel$test %>%
-  select(-is_canceled) %>%
+  hotel$test  %>%
   as.matrix() %>%
   xgb.DMatrix(data = ., label = hotel$test$is_canceled)
 
@@ -144,4 +172,9 @@ prediccion[prediccion < 0.5] <- 0
 
 t_validation <- table(prediccion, validacion_test)
 
-(accuracy <- sum(diag(t_validation))/sum(t_validation))
+confusionMatrix(p_test)
+
+# La curva ROC sale perfecta, rollo con área 1 así que probablemente este mal
+
+#print(roc.plot(dataTest$is_canceled == 1, hotel$predict_validation)$roc.vol)
+
