@@ -11,7 +11,7 @@
 # cargamos los paquetes que usaremos
 
 packages <- c("corrplot","PerformanceAnalytics", "FactoMineR", "factoextra")
-sapply(pkg, require, character.only = TRUE)
+sapply(packages, require, character.only = TRUE)
 
 if(!exists('d.e')){
   path <-'../data'
