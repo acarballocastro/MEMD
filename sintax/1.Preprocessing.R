@@ -21,7 +21,9 @@ name <- names(d.e)
 n <- list(total=prod(dim(d.e)),observation=nrow(d.e),variable=ncol(d.e))
 
 # Cargamos los paquetes necesarios y funciones propias
-pkg <- c('ggplot2',"corrplot","PerformanceAnalytics", "FactoMineR", "factoextra",'Matrix','Hmisc')
+pkg <- c('ggplot2',"corrplot","PerformanceAnalytics", "FactoMineR", "factoextra",'Matrix','NbClust',
+         'MASS','verification','VIM','Hmisc','caret','rpart','naivebayes','tidyverse','tidyr','cluster',
+         'lattice','rpart.plot','xgboost','tidyverse','caTools','e1071','nnet','arules','arulesViz')
 new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
 if (length(new.pkg)){ install.packages(new.pkg, dependencies = TRUE) ; rm(c('pkg','new.pkg'))}
 
