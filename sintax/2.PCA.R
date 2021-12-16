@@ -13,7 +13,7 @@
 packages <- c("corrplot","PerformanceAnalytics", "FactoMineR", "factoextra")
 sapply(pkg, require, character.only = TRUE)
 
-if(!exists(d.e)){
+if(!exists('d.e')){
   path <-'../data'
   d.e <- read.csv2(paste0(path,'/',"data_preproc.csv"), sep=",")
   d.e$adr<-as.numeric(d.e$adr)
