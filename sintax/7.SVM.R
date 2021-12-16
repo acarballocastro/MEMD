@@ -1,29 +1,36 @@
 ###############################################
-# Título: 3.Preprocessing
+# T?tulo: 3.Preprocessing
 # Autor: Alba, Pol
 # Fecha: 06/12/21
 
-# Descripción: En este script empleamos el método
+# Descripci?n: En este script empleamos el m?todo
 # Support Vector Machine (SVM) para entrenar un 
 # modelo que nos permita predecir cancelaciones
 ###############################################
 
-# Instalamos las librerías necesarias
-pkg <- c("e1071","caret", "rpart")
-new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+# Cargamos las librer?as
 
-if (length(new.pkg)){ 
-  install.packages(new.pkg, dependencies = TRUE) ; rm(c('pkg','new.pkg'))
-  }
-
-# Cargamos las librerías
-library(e1071)
-library(caret)
-library(rpart)
+packages <- c("e1071", "caret","rpart","kernlab")
+sapply(packages, require, character.only = TRUE)
 
 # Lectura de la base de datos
-dd_svm <- read.csv("../data/data_preproc.csv")
-str(dd_svm)
+if(!exists('d.e')){
+  path <-'../data'
+  d.e <- read.csv2(paste0(path,'/',"hotel_bookings_proc.csv"), sep=",")
+  d.e$adr<-as.numeric(d.e$adr)
+  v<-list(
+    categoric=c('hotel','is_canceled', 'arrival_date_month','arrival_date_year', 'meal','market_segment','distribution_channel',
+                'is_repeated_guest','reserved_room_type','assigned_room_type', 'room_coherence', 
+                'is_company', 'is_agent', 'customer_type','deposit_type', 'if_prev_cancel','if_wait'),
+    integer=c('lead_time', 'stays_in_weekend_nights','stays_in_week_nights','adults','children','babies',
+              'booking_changes','required_car_parking_spaces','total_of_special_requests'),
+    continua='adr')
+  v$numeric <- c(v$integer,v$continua)
+  library(ggplot2)
+  for(i in v$categoric) d.e[[i]]<-as.factor(d.e[[i]])
+  for(i in v$integer) d.e[[i]]<-as.integer(d.e[[i]])
+}
+dd_svm <-d.e
 
 set.seed(2021)
 
@@ -46,10 +53,10 @@ svm.tune <- train(is_canceled ~ .,
                   verbose = FALSE,
                   tuneLength = 1)
 
-# Vemos cuales son los hiperparámetros escogidos
+# Vemos cuales son los hiperpar?metros escogidos
 svm.tune
 
-# Creamos el modelo con estos parámetros usando un kernel linear
+# Creamos el modelo con estos par?metros usando un kernel linear
 modelsvm <- svm(is_canceled ~ ., data=dataTrain, kernel = "linear", cost = 1, scale = FALSE)
 print(modelsvm)
 
@@ -67,7 +74,7 @@ accuracy
 errorRate <- 1-accuracy
 errorRate
 
-# De forma automática
+# De forma autom?tica
 confusionMatrix(tsvm)
 
 # Representamos escalando las variables y dibujando en nuevas coordenadas
