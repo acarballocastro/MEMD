@@ -1,37 +1,51 @@
 ###############################################
-# T铆tulo: 2. PCA
-# Autor: Aleix
+# T韙ulo: 2. PCA y MCA
+# Autor: Aleix, Alba
 # Fecha: 30/11/21
-# Descripci贸n: PRINCIPAL COMPONENT ANALYSIS (PCA). El objetivo de PCA es la reducci贸n de dimensiones, que se puede utilizar para:
-# 1 - visualizaci贸n de datos multivariados mediante diagramas de dispersi贸n
-# 2 - transformaci贸n de variables x altamente correlacionadas en un conjunto m谩s peque帽o de variables latentes no correlacionadas que pueden ser utilizadas por otros m茅todos
-# 3 - separaci贸n de la informaci贸n relevante (por algunas variables latentes) del ruido
+# Descripci髇: PRINCIPAL COMPONENT ANALYSIS (PCA). El objetivo de PCA es la reducci髇 de dimensiones, que se puede utilizar para:
+# 1 - visualizaci髇 de datos multivariados mediante diagramas de dispersi髇
+# 2 - transformaci髇 de variables x altamente correlacionadas en un conjunto m醩 peque駉 de variables latentes no correlacionadas que pueden ser utilizadas por otros m閠odos
+# 3 - separaci髇 de la informaci髇 relevante (por algunas variables latentes) del ruido
+# Segunda parte: MCA, misma idea pero para variables categ髍icas
 ###############################################
 
-# cargamos los paquetes que usaremos
+# Instalamos y cargamos los paquetes que usaremos
+ipak <- function(pkg){
+  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if (length(new.pkg)) 
+    install.packages(new.pkg, dependencies = TRUE)
+  sapply(pkg, require, character.only = TRUE)
+}
 
 packages <- c("corrplot","PerformanceAnalytics", "FactoMineR", "factoextra")
-sapply(packages, require, character.only = TRUE)
+ipak(packages)
 
-if(!exists('d.e')){
-  path <-'../data'
-  d.e <- read.csv2(paste0(path,'/',"data_preproc.csv"), sep=",")
-  d.e$adr<-as.numeric(d.e$adr)
-  v<-list(
-    categoric=c('hotel','is_canceled', 'arrival_date_month','arrival_date_year', 'meal','market_segment','distribution_channel',
-                'is_repeated_guest','reserved_room_type','assigned_room_type', 'room_coherence', 
-                'is_company', 'is_agent', 'customer_type','deposit_type', 'if_prev_cancel','if_wait'),
-    integer=c('lead_time', 'stays_in_weekend_nights','stays_in_week_nights','adults','children','babies',
-              'booking_changes','required_car_parking_spaces','total_of_special_requests'),
-    continua='adr')
-  v$numeric <- c(v$integer,v$continua)
-  
-  for(i in v$categoric) d.e[[i]]<-as.factor(d.e[[i]])
-  for(i in v$integer) d.e[[i]]<-as.integer(d.e[[i]])
-}
-dd<-d.e
+#Leemos la base de datos
+path<-strsplit(shell('dir TMD.Rmd',intern = T)[4],' ')[[1]][4]
+filename<- "data_preproc.csv"
+setwd(path)
+dd<-read.csv(paste0('Data/',filename))
 
-## PCA ## # TO INTERPRET THE RESULTS <-- https://www.researchgate.net/post/How_many_components_can_I_retrieve_in_principal_component_analysis
+# Declaraci髇 de variables, no incluimos la variables respuesta 'is_canceled'
+v<-list(
+  categoric=c('hotel','is_canceled', 'arrival_date_month','arrival_date_year', 'meal','market_segment','distribution_channel',
+              'is_repeated_guest','reserved_room_type','assigned_room_type', 'room_coherence', 
+              'is_company', 'is_agent', 'customer_type','deposit_type', 'if_prev_cancel','if_wait'),
+  integer=c('lead_time', 'stays_in_weekend_nights','stays_in_week_nights','adults','children','babies',
+            'booking_changes','required_car_parking_spaces','total_of_special_requests'),
+  continua='adr')
+v$numeric <- c(v$integer,v$continua)
+
+for(i in v$categoric) dd[[i]]<-as.factor(dd[[i]])
+for(i in v$integer) dd[[i]]<-as.integer(dd[[i]])
+
+sapply(dd,class)
+
+# Vemos los missings de cada variable
+sapply(dd, function(x) sum(is.na(x))) # --> NO MISSINGS
+
+# PCA ----
+# TO INTERPRET THE RESULTS <-- https://www.researchgate.net/post/How_many_components_can_I_retrieve_in_principal_component_analysis
 dd.pca <- dd[,v$numeric]
 # Si queremos suprimir el outlier --> #dd.pca <- dd.pca[-c(173),]
 
@@ -39,7 +53,7 @@ res.pca <- PCA(dd.pca, graph = FALSE)
 n<-which(res.pca$eig[,3]>80)[1]
 n # Con las primeras 7 componentes se captura un 80% de la varianza
 
-res.pca <- PCA(dd.pca, graph = FALSE,ncp=n)
+res.pca <- PCA(dd.pca, graph = FALSE,ncp=7)
 print(res.pca)
 
 eigenvalues <- res.pca$eig
@@ -52,7 +66,7 @@ barplot(eigenvalues[, 2], names.arg=1:nrow(eigenvalues),
         col ="steelblue")
 
 # Add connected line segments to the plot
-lines(x = seq(0.7,10*1.2,by=1.2), eigenvalues[, 2],
+lines(x = 1:nrow(eigenvalues), eigenvalues[, 2],
       type="b", pch=19, col = "red")
 
 fviz_screeplot(res.pca, ncp=10)
@@ -114,3 +128,51 @@ fviz_pca_biplot(res.pca,  geom = "text")
 #   scale_color_brewer(palette="Dark2")+
 #   theme_minimal()
 
+# MCA ----
+
+dd.mca <- dd[,v$categoric]
+
+res.mca <- MCA(dd.mca, graph = FALSE)
+
+n <- which(res.mca$eig[,3]>80)[1]
+n # Con las primeras 31 componentes se captura un 80% de la varianza
+
+res.mca <- MCA(dd.mca, graph = FALSE, ncp=31)
+print(res.mca)
+
+eigenvalues <- res.mca$eig
+eigenvalues[, 1:2]
+
+barplot(eigenvalues[, 2], names.arg=1:nrow(eigenvalues),
+        main = "Variances",
+        xlab = "Principal Components",
+        ylab = "Percentage of variances",
+        col ="steelblue")
+
+# Add connected line segments to the plot
+lines(x = 1:nrow(eigenvalues), eigenvalues[, 2],
+      type="b", pch=19, col = "red")
+
+fviz_screeplot(res.mca, ncp=31)
+
+# Coordinates of variables on the principal components
+res.mca$var$coord
+
+# The quality of representation of the variables of the principal components are called the cos2.
+res.mca$var$cos2
+
+# Variable contributions in the determination of a given principal component are (in percentage) : (var.cos2 * 100) / (total cos2 of the component)
+taula<- res.mca$var$contrib
+
+fviz_mca_var(res.mca, choice = "mca.cor",  col.var = "turquoise4",
+             repel = TRUE)
+
+# Contributions of rows to dimension 1
+fviz_contrib(res.mca, choice = "var", axes = 1, top = 15)
+# Contributions of rows to dimension 2
+fviz_contrib(res.mca, choice = "var", axes = 2, top = 15)
+
+fviz_mca_var(res.mca, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal())
