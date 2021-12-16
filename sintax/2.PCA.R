@@ -7,7 +7,7 @@
 # 2 - transformación de variables x altamente correlacionadas en un conjunto más pequeño de variables latentes no correlacionadas que pueden ser utilizadas por otros métodos
 # 3 - separación de la información relevante (por algunas variables latentes) del ruido
 ###############################################
-# Instalamos i cargamos los paquetes que usaremos
+# Instalamos y cargamos los paquetes que usaremos
 ipak <- function(pkg){
   new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
   if (length(new.pkg)) 
