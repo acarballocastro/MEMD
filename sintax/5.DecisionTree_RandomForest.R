@@ -57,13 +57,15 @@ rpart.plot(d_tree)
 
 pred_dt <- predict(d_tree, newdata = dataTest)
 
+
 # Después cogemos los valores que han salido en la predicción y los transformamos en 0 o 1,
 # dependiendo de si tienen un valor más pequeño de 0.5 o más grande, resprectivamente.
 
 pred_dtp <- pred_dt[, 2]
 pred_dtp[pred_dt[, 2] < 0.5] <- "Cancelled"
 pred_dtp[pred_dt[, 2] >= 0.5] <- "Not_cancelled"
- 
+
+
 # Aquí vemos con una tabla cuantos valores hemos acertado y cuantos fallado.
 (t_dt <- table(dataTest$is_canceled, pred_dtp))
 
@@ -76,6 +78,19 @@ confusionMatrix(t_dt)
 
 print(roc.plot(dataTest$is_canceled == "Cancelled", pred_dt[,1])$roc.vol)
 
+# Ahora haremos la predicción con los datos train para ver si los resultados son similares a los
+# hechos con los datos test:
+
+pred_train <- predict(d_tree, newdata = dataTrain)
+
+pred_dtp <- pred_train[, 2]
+pred_dtp[pred_train[, 2] < 0.5] <- "Cancelled"
+pred_dtp[pred_train[, 2] >= 0.5] <- "Not_cancelled"
+
+(t_dt <- table(dataTrain$is_canceled, pred_dtp))
+
+
+confusionMatrix(t_dt)
 
 ### RANDOM FOREST
 # Ahora utilizaremos el paquete RandomForest para hacer el modelo. Decidimos crear 100 árboles para este modelo (ntree = 100)
@@ -92,6 +107,11 @@ confusionMatrix(p_test)
 
 print(roc.plot(dataTest$is_canceled == "Not_cancelled", model_rf$test$votes[,2])$roc.vol)
 
+# Hacempos tabla de confusión de los datos Train:
+
+p_train <- model_rf$confusion[1:2,1:2]
+
+confusionMatrix(p_train)
 
 ### XGBOOST
 # Ahora usaremos el método de Xgboost para la predicción de la variable is_canceled:
@@ -168,13 +188,13 @@ prediccion[prediccion >= 0.5] <- 1
 
 prediccion[prediccion < 0.5] <- 0
 
-# Hacemos la tabla de confusión y vemos que tenemos una predicción de 0.873.
+# Hacemos la tabla de confusión:
 
-t_validation <- table(prediccion, validacion_test)
+t_validation <- table(prediccion, dataTest$is_canceled)
 
-confusionMatrix(p_test)
+confusionMatrix(t_validation)
 
-# La curva ROC sale perfecta, rollo con área 1 así que probablemente este mal
+# La curva ROC sale perfecta, con área bajo la curva de 1:
 
-#print(roc.plot(dataTest$is_canceled == 1, hotel$predict_validation)$roc.vol)
+print(roc.plot(dataTest$is_canceled == 1, hotel$predict_validation)$roc.vol)
 
