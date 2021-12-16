@@ -1,42 +1,40 @@
 ###############################################
-# T√≠tulo: 1. Preprocessing
+# TÌtulo: 1. Preprocessing
 # Autor: Alba, Aleix, Pol, Yuhang, Irene
 # Fecha: 14/12/21
 
-# Descripci√≥n: En este script hacemos el preprocessing
-# de la base de datos seleccionando las variables de inter√©s 
-# y creando nuevas variables. Tambi√©n hay gr√°ficos para
-# ayudar a la descripci√≥n univariante y bivariante,
-# tanto antes del preprocessing como despu√©s
+# DescripciÛn: En este script hacemos el preprocessing
+# de la base de datos seleccionando las variables de interÈs 
+# y creando nuevas variables. TambiÈn hay gr·ficos para
+# ayudar a la descripciÛn univariante y bivariante,
+# tanto antes del preprocessing como despuÈs
 ###############################################
 
 
 # Leemos la base de datos de GitHub
 path <-'../data'
 data <- read.csv2(paste0(path,'/',"../data/hotel_bookings.csv"), sep=",")
-# Seleccionamos solo clientes de Espa√±a
+# Seleccionamos solo clientes de EspaÒa
 d.e <- data[data$country=='ESP',names(data)!='country']
 
 name <- names(d.e)
 n <- list(total=prod(dim(d.e)),observation=nrow(d.e),variable=ncol(d.e))
 
 # Cargamos los paquetes necesarios y funciones propias
-pkg <- c('ggplot2',"corrplot","PerformanceAnalytics", "FactoMineR", "factoextra",'Matrix','NbClust',
-         'MASS','verification','VIM','Hmisc','caret','rpart','naivebayes','tidyverse','tidyr','cluster',
-         'lattice','rpart.plot','xgboost','tidyverse','caTools','e1071','nnet','arules','arulesViz')
+pkg <- c('ggplot2',"corrplot","PerformanceAnalytics", "FactoMineR", "factoextra",'Matrix','Hmisc')
 new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
 if (length(new.pkg)){ install.packages(new.pkg, dependencies = TRUE) ; rm(c('pkg','new.pkg'))}
 
 
 
 ###############################################
-# 1. Descripci√≥n de los datos
+# 1. DescripciÛn de los datos
 ###############################################
 
-########### Descripci√≥n de datos faltantes
+########### DescripciÛn de datos faltantes
 
-# Seg√∫n la metadata son missings del tipo no aplicable
-# (est√° comentado m√°s adelante, en el preprocessing)
+# Seg˙n la metadata son missings del tipo no aplicable
+# (est· comentado m·s adelante, en el preprocessing)
 d.e[d.e=='NULL'] <- NA
 mis <- sapply(d.e,function(x) sum(is.na(x)))
 v.mis <- which(mis>0)
@@ -45,8 +43,14 @@ n$missing <- sum(mis)
 mis <- list(count=list(number=n$missing,forvar=mis),
             relative=list(forall=n$missing/n$total,formissing=mis/n$missing,
                           forvar=mis/n$observation))
-mis$relative$formissing <- data.frame(prop=mis$relative$formissing, 
-                                      variable=names(mis$relative$formissing))
+missing <- data.frame(prop=mis$relative$formissing, variable=names(mis$relative$formissing))
+
+ggplot(data=missing, aes(x=variable, y=prop)) +
+  geom_bar(stat="identity", fill = "steelblue") +
+  geom_text(aes(label=round(prop*100,2)), vjust=1.6, color="black", size=3.5) +
+  theme_minimal() +
+  labs(x = "Variable", y = "Proporcion de missings", title = "Missings")
+
 
 # Definimos el tipo de variables
 v <- list(
@@ -64,37 +68,38 @@ v <- list(
 )
 v$numeric <- c(v$integer,v$continua,v$times)
 
-# Declaraci√≥n de variables
-for(i in v$categoric) d.e[[i]]<-as.factor(d.e[[i]])
-for(i in v$integer) d.e[[i]]<-as.integer(d.e[[i]])
-for(i in v$times) d.e[[i]]<-as.Date(d.e[[i]])
-levels(d.e$arrival_date_month)<-c("January", "February" ,"March", "April","May",
+# DeclaraciÛn de variables
+for(i in v$categoric) d.e[[i]] <- as.factor(d.e[[i]])
+for(i in v$integer) d.e[[i]] <- as.integer(d.e[[i]])
+for(i in v$times) d.e[[i]] <- as.Date(d.e[[i]])
+levels(d.e$arrival_date_month) <- c("January", "February" ,"March", "April","May",
                                   "June" , "July", "August"  , "September" , 
                                   "November" , "October", "December")
-levels(d.e$reserved_room_type)<-levels(d.e$assigned_room_type)
+levels(d.e$reserved_room_type) <- levels(d.e$assigned_room_type)
 
 
-########### An√°lisis descriptivo UNIVARIANTE inicial
+########### An·lisis descriptivo UNIVARIANTE inicial
 
-# Se realiza un bucle para la creaci√≥n de gr√°ficos autom√°ticamente.
-# Con la funci√≥n 'capitalize' ponemos en may√∫sculas la primera letra del nombre
-# y con la funci√≥n 'gsub' substitu√≠mos los s√≠mbolos "_" por espacios.
-# Para ello necesitamos la librer√≠a 'Hmisc'.
+# Se realiza un bucle para la creaciÛn de gr·ficos autom·ticamente.
+# Con la funciÛn 'capitalize' ponemos en may˙sculas la primera letra del nombre
+# y con la funciÛn 'gsub' substituÌmos los sÌmbolos "_" por espacios.
+# Para ello necesitamos la librerÌa 'Hmisc'.
 
-# Con la funci√≥n 'png' guardamos los gr√°ficos en el ordenador en vez de imprimirlos
-# en pantalla para as√≠ ponerlos y comentarlos en el documento word. 
-# Debemos tener en cuenta que las im√°genes se guardar√°n en el directorio de trabajo
+# Con la funciÛn 'png' guardamos los gr·ficos en el ordenador en vez de imprimirlos
+# en pantalla para asÌ ponerlos y comentarlos en el documento word. 
+# Debemos tener en cuenta que las im·genes se guardar·n en el directorio de trabajo
 # en el que nos encontremos.
 
 for(j in 1:4){
   # 1 categoric, 2 integer, 3 continua, 4 temporal
   cat('\n\nVariable',names(v)[j],'\n')
-  color <- "lightskyblue1" # "darkolivegreen2"
+  color <- "darkolivegreen2" #  "lightskyblue1"
   for(i in v[[j]]){
     a <- capitalize(gsub("_", " ", i))
     cat('\n\n')
     #png(paste0(a,".","png"))
-    print(ggplot(d.e, aes(x=d.e[[i]])) + geom_bar(stat = "count", fill=color,na.rm = T)+
+    print(ggplot(d.e, aes(x=d.e[[i]]))+ 
+            geom_bar(stat = "n∫ clientes", fill=color,na.rm = T)+
             theme_minimal() +
             labs(title = "Histograma")+xlab(a))
     #dev.off()
@@ -102,15 +107,15 @@ for(j in 1:4){
   }
 }
 
-########### An√°lisis descriptivo BIVARIANTE inicial
+########### An·lisis descriptivo BIVARIANTE inicial
 
 # Aparte de lo mencionado anteriormente, en el caso de la bivariante se tiene 
-# en cuenta qu√© tipo de variable tenemos a la hora de hacer el gr√°fico.
-# Las variables num√©ricas que no hemos podido representar con un 'boxplot'
+# en cuenta quÈ tipo de variable tenemos a la hora de hacer el gr·fico.
+# Las variables numÈricas que no hemos podido representar con un 'boxplot'
 # se han representado con un 'barplot'.
 
 for(j in 1:3){
-  color <- c("lightskyblue1","lightskyblue") #"Indianred2","darkolivegreen2"
+  color <- c("Indianred2","darkolivegreen2") # "lightskyblue1","lightskyblue"
   for(i in v[[j]]){
     b <- capitalize(gsub("_", " ", i))
     #png(paste0(b,".","png"))
@@ -136,8 +141,8 @@ cat.idx <- function(data,name=NULL,mis=NULL,time=NULL){
   if(missing(name)) name <- 1:length(data)
   cla <- sapply(data, class)
   v <- list(categoric=name[which(cla == 'factor')],
-          integer=name[which(cla == 'integer')],
-          continua=name[which(cla == 'numeric')])
+            integer=name[which(cla == 'integer')],
+            continua=name[which(cla == 'numeric')])
   v$numeric <- c(unlist(v$continua),unlist(v$integer))
   if(!missing(mis)) v$withmissing <- mis
   if(!missing(time)) v$times <- time
@@ -145,78 +150,90 @@ cat.idx <- function(data,name=NULL,mis=NULL,time=NULL){
 }
 
 
-# Los missings est√°n concentrados en las variables "company" y "agent".
+# Recordamos que los missings est·n concentrados en las variables "company" y "agent".
 # Son missings no aplicables, estructurales, ya que si un cliente no hizo la reserva
-# a partir de una agencia/compa√±√≠a de viajes, no tiene sentido preguntarle
+# a partir de una agencia/compaÒÌa de viajes, no tiene sentido preguntarle
 # preguntarle por esta.
-# As√≠ que eliminamos las variables "company" y "agent" y a√±adimos 2 variables m√°s: 
-# "is_company" y "is_agent", que indican si la reserva se ha hecho a trav√©s de 
-# una agencia o compa√±√≠a (1) o no (0), respectivamente.
+# AsÌ que eliminamos las variables "company" y "agent" y aÒadimos 2 variables m·s: 
+# "is_company" y "is_agent", que indican si la reserva se ha hecho a travÈs de 
+# una agencia o compaÒÌa (1) o no (0), respectivamente.
 d.e$is_company <- factor(ifelse(is.na(d.e$company),0,1))
 d.e$is_agent <- factor(ifelse(is.na(d.e$agent),0,1))
 v.elimina <- which(names(d.e) %in% c('company','agent'))
 d.e <- d.e[,-v.elimina]
 
-# Renovamos los √≠ndices
+# Renovamos los Ìndices
 v <- cat.idx(d.e,names(d.e),time=v$times)
 
 # Seguimos con otras variables
 
-# Creemos que es mejor saber si la habitaci√≥n reservada se corresponde
+# Creemos que es mejor saber si la habitaciÛn reservada se corresponde
 # con la asignada que considerar estas 2 variables por separado
-# ya que no sabemos qu√© significa cada categor√≠a.
-# Por eso, creamos la variable "room_coherence", que ser√° 1 si
-# la habitaci√≥n reservada se corresponde con la asignada
+# ya que no sabemos quÈ significa cada categorÌa.
+# Por eso, creamos la variable "room_coherence", que ser· 1 si
+# la habitaciÛn reservada se corresponde con la asignada
 # y 0 en caso contrario. 
 d.e$room_coherence <- factor(d.e$reserved_room_type == d.e$assigned_room_type)
 
 # Como con las habitaciones, consideramos que es mejor saber si ha habido
-# d√≠as en la cola de espera que saber cu√°ntos son
+# dÌas en la cola de espera que saber cu·ntos son
 d.e$if_wait <- factor(d.e$days_in_waiting_list>0)
 
 # Igualmente para "previous_cancellations" i "previous_bookings_not_canceled"
 d.e$if_prev_cancel <- factor(d.e$previous_cancellations>0)
 d.e$if_prev_asign <- factor(d.e$previous_bookings_not_canceled>0)
 
-d.new_crea <- d.e[,c('is_canceled','room_coherence','if_prev_cancel','if_prev_asign','if_wait')]
-
-# Renovamos los √≠ndices
+# Renovamos los Ìndices
 v <- cat.idx(d.e,names(d.e),time=v$times)
 
 
-# Observamos que la variable "reservation_status" tiene la misma informaci√≥n que
-# nuestra variable respuesta as√≠ que la eliminaremos, al igual que "reservation_status_date",
+# Observamos en un barplot de la descriptiva bivariante
+# que la variable "reservation_status" tiene la misma informaciÛn que
+# nuestra variable respuesta asÌ que la eliminaremos, al igual que "reservation_status_date",
 # pues esta variable no nos aporta nada, y menos si hemos dicho de quitar "reservation_status".
 
-# Notamos que nuestra variable respuesta est√° igual distribuida que la variable "arrival_date_day_of_month"
-# por lo que esta √∫ltima no aporta informaci√≥n nueva, as√≠ que la eliminaremos.
+
+# Notamos que nuestra variable respuesta est· igual distribuida que la variable "arrival_date_day_of_month"
+# por lo que esta ˙ltima no aporta informaciÛn nueva, asÌ que la eliminaremos.
 # Lo mismo haremos con "arrival_date_week_number", pues indica lo mismo que "arrival_date_day_of_month".
+ggplot(d.e, aes(x = arrival_date_day_of_month, fill = is_canceled, y = is_canceled)) + 
+  geom_col(position = "fill") +
+  ggtitle("CorrelaciÛn entre dÌa del mes y cancelaciones")+ 
+  labs(y="Cancelaciones", x = "DÌa del mes")
+
+
+
+# Eliminamos las variables que habÌamos dicho y renovamos los Ìndices
 v.elimina <- which(names(d.e) %in% c('reservation_status_date','reservation_status',
                                      'arrival_date_day_of_month','arrival_date_week_number'))
 d.e <- d.e[,-v.elimina]
-
-# Renovamos los √≠ndices
 v <- cat.idx(d.e,names(d.e))
 
 
-# Ahora, miraremos la correlaci√≥n entre variables num√©ricas con un valor mayor a 0.2.
-# Si hay correlaci√≥n, eliminaremos una de las 2 variables implicadas.
+# Ahora, miraremos la correlaciÛn entre variables numÈricas con un valor mayor a 0.2.
+# Si hay correlaciÛn, eliminaremos una de las 2 variables implicadas.
 corr <- cor(d.e[,v$numeric])
 corr[ col(corr)<=row(corr) ] <- 0
 corr <- corr[!apply(corr, 1, function(x) all(abs(x) < 0.2)),
-           !apply(corr, 2, function(x) all(abs(x) < 0.2))]
+             !apply(corr, 2, function(x) all(abs(x) < 0.2))]
 
-# Visto la alta correlaci√≥n entre "previous_cancellations" y "previous_bookings_not_canceled", 
+
+corr <- cor(d.e[,v$numeric])
+corr[col(corr)<=row(corr)] <- 0
+corr <- corr[!apply(corr, 1, function(x) all(abs(x) < 0.2)),!apply(corr, 2, function(x) all(abs(x) < 0.2))]
+corrplot::corrplot(corr)
+
+# Vista la alta correlaciÛn entre "previous_cancellations" y "previous_bookings_not_canceled", 
 # decidimos que eliminamos una de estas variables.
-# Y como hab√≠amos creado unas variables equivalentes anteriormente,
+# Y como habÌamos creado unas variables equivalentes anteriormente,
 # eliminaremos las dos: "previous_cancellations" y "previous_bookings_not_canceled"
-# y tambi√©n la equivalente a una de ellas, "if_prev_asign".
-# Y ya que estamos eliminando variables duplicadas, eliminaremos tambi√©n
+# y tambiÈn la equivalente a una de ellas, "if_prev_asign".
+# Y ya que estamos eliminando variables duplicadas, eliminaremos tambiÈn
 # "days_in_waiting_list", pues antes hemos creado "if_wait".
 d.e <- d.e[,!names(d.e)%in%c('previous_bookings_not_canceled',
                              'previous_cancellations','if_prev_asign',
                              'days_in_waiting_list')]
-# Renovamos los √≠ndices
+# Renovamos los Ìndices
 v <- cat.idx(d.e,names(d.e))
 
 # Arreglamos los labels
@@ -232,14 +249,14 @@ write.csv(d.e, paste0(path,'/', 'data_preproc.csv'), row.names = FALSE)
 
 
 #########################################################
-# 3. Descripci√≥n de los datos despu√©s del preprocessing
+# 3. DescripciÛn de los datos despuÈs del preprocessing
 #########################################################
 
-########### An√°lisis descriptivo UNIVARIANTE posterior
+########### An·lisis descriptivo UNIVARIANTE posterior
 
 for(j in 1:3){
   cat('Variable',names(v)[j],'\n')
-  color <- lightskyblue1 # "darkolivegreen2"
+  color <- "darkolivegreen2" 
   for(i in v[[j]]){
     a2 <- capitalize(gsub("_", " ", names(d.e)[i]))
     cat('\n\n')
@@ -253,23 +270,21 @@ for(j in 1:3){
 }
 
 
-########### An√°lisis descriptivo BIVARIANTE posterior
+########### An·lisis descriptivo BIVARIANTE posterior
 
 for(j in 1:3){
-  cat('Variable',names(v)[j],'\n')
-  color <- c("lightskyblue1","lightskyblue") # "Indianred2","darkolivegreen2"
-  
-  for(i in names(d.e)[v[[j]]]){
+  color <- c("Indianred2","darkolivegreen2") 
+  for(i in v[[j]]){
     b2 <- capitalize(gsub("_", " ", i))
-    cat('\n\n')
-    #png(paste0(b2,".","png"))
+    #png(paste0(b,".","png"))
     if (j == 1){
-      if(i == 'is_canceled') next
-      barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=b2,col=color)
+      if(i == 'is_canceled'){ next }
+      barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=b,col=color)
     }else if(j == 2){
-      if(median(d.e[[i]]) >= 1 && median(d.e[[i]]) != quantile(d.e[[i]],0.75)) boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=b2,col=color,horizontal=T)
-      else barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=b2,col=color)
-    }else boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=b2,col=color,horizontal=T)
+      if(median(d.e[[i]]) >= 1 && median(d.e[[i]]) != quantile(d.e[[i]],0.75)){
+        boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=b,col=color,horizontal=T)}
+      else barplot(prop.table(table(d.e$is_canceled, d.e[[i]]),2),main=b,col=color)
+    }else {boxplot(as.formula(paste0(i,"~is_canceled")),d.e,main=b,col=color,horizontal=T)}
     #dev.off()
   }
 }
