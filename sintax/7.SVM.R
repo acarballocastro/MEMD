@@ -1,5 +1,5 @@
 ###############################################
-# T?tulo: 3.Preprocessing
+# T?tulo: 7. SVM
 # Autor: Alba, Pol
 # Fecha: 06/12/21
 
@@ -10,7 +10,7 @@
 
 # Cargamos las librer?as
 
-packages <- c("e1071", "caret","rpart","kernlab")
+packages <- c("e1071", "caret","rpart","kernlab",'cluster')
 sapply(packages, require, character.only = TRUE)
 
 # Lectura de la base de datos
