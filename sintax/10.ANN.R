@@ -1,9 +1,9 @@
 ###############################################
-# Título: 9. ANN
+# TÃ­tulo: 9. ANN
 # Autor: Alba
 # Fecha: 14/12/21
 
-# Descripción: En este script empleamos redes 
+# DescripciÃ³n: En este script empleamos redes 
 # neuronales (ANN) para entrenar un 
 # modelo que nos permita predecir cancelaciones
 ###############################################
@@ -38,7 +38,7 @@ mynet.resubst.error <- 1-sum(tab[row(tab)==col(tab)])/sum(tab)
 1-mynet.resubst.error
 
 # Hay mucho ruido, por eso tenemos un accuracy tan bajo
-# Vamos a intentar aumentar el accuracy intentando predecir sólo con las variables numéricas
+# Vamos a intentar aumentar el accuracy intentando predecir sÃ³lo con las variables numÃ©ricas
 
 # Escalamos
 dd_ann[c("lead_time", "stays_in_weekend_nights", "stays_in_week_nights", "adults",
